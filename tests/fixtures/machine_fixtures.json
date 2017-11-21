@@ -1,0 +1,13 @@
+[
+  {
+    "model": "api.Machine",
+    "pk": 1,
+    "fields": {
+        "host": "localhost",
+        "ip": "127.0.0.1",
+        "workers": [
+            1
+        ]
+    }
+  }
+]
