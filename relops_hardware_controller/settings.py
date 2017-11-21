@@ -152,10 +152,10 @@ class Base(Configuration):
     CELERY_TASK_TIME_LIMIT = CELERY_TASK_SOFT_TIME_LIMIT * 2
 
     TASK_NAMES = [
-        'loan',
-        'reboot',
-        'reimage',
-        'return_loan',
+        # 'loan',
+        # 'reboot',
+        # 'reimage',
+        # 'return_loan',
         'ping',
     ]
 
