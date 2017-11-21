@@ -1,0 +1,12 @@
+coverage
+flake8
+hashin
+mock
+pyflakes
+pytest
+pytest-django
+pytest-flake8
+pytest-watch
+tox
+virtualenv
+watchdog
