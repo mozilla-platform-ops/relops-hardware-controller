@@ -1,0 +1,13 @@
+Django
+celery
+dj-database-url
+django-configurations
+django-filter
+django-celery-results
+django-redis
+djangorestframework
+markdown
+mohawk
+psycopg2
+redis
+taskcluster
