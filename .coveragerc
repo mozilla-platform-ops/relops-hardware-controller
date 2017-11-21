@@ -1,0 +1,16 @@
+[run]
+source = relops_hardware_controller
+branch = True
+data_file = /tmp/.coverage
+
+[report]
+omit =
+    relops_hardware_controller/settings.py
+    relops_hardware_controller/wsgi.py
+    *migrations*
+    *management*
+    *management/commands*
+
+
+[xml]
+output = /tmp/coverage.xml
