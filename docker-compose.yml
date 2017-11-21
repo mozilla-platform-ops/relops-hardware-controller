@@ -1,0 +1,67 @@
+version: '2'
+
+services:
+  db:
+    image: postgres:9.6
+  redis:
+    image: redis:3.2
+
+  # Base container is used for development tasks like tests, linting, coverage
+  # and building docs.
+  base:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: roller:build
+    environment:
+      - DJANGO_CONFIGURATION
+    env_file:
+      - .env
+
+  web:
+    extends:
+      service: base
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "8000:8000"
+    links:
+      - db
+      - redis
+    volumes:
+      - $PWD:/app
+    command: web-dev
+
+  test:
+    extends:
+      service: base
+    depends_on:
+      - db
+    links:
+      - db
+    command: test
+
+  worker:
+    extends:
+      service: base
+    depends_on:
+      - base
+    links:
+      - db
+      - redis
+    volumes:
+      - $PWD:/app
+    command: worker-purge
+
+  watch-worker:
+    extends:
+      service: base
+    depends_on:
+      - base
+    links:
+      - db
+      - redis
+    volumes:
+      - $PWD:/app
+    command: watch-worker-purge
