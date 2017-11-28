@@ -15,6 +15,10 @@ RUN mkdir /app && \
     groupadd --gid 10001 app && \
     useradd --no-create-home --uid 10001 --gid 10001 --home-dir /app app
 
+# hack to make postgresql-client install work on slim
+RUN mkdir -p /usr/share/man/man1 \
+    && mkdir -p /usr/share/man/man7
+
 # install a few essentials and clean apt caches afterwards
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
