@@ -33,4 +33,4 @@ class JobSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Job
-        fields = ('task_name', 'tc_worker_id', 'task_id')
+        fields = ('task_name', 'worker_id', 'task_id')

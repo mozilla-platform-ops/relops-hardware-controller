@@ -31,13 +31,17 @@ class JobList(APIView):
     """
     Create a new job to queue it.
     """
-    def post(self, request, format=None):
-        serializer = JobSerializer(data=request.GET)
+    def post(self, request, worker_id, worker_group, format=None):
+        serializer = JobSerializer(data=dict(
+            worker_id=worker_id,
+            worker_group=worker_group,
+            task_name=request.GET.get('task_name', '')
+        ))
 
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        job_tc_worker_id = serializer.validated_data['tc_worker_id']
+        job_tc_worker_id = serializer.validated_data['worker_id']
         tc_worker = TaskClusterWorker.objects.filter(tc_worker_id=job_tc_worker_id).first()
         if not tc_worker:
             logger.info('Failed to find TC worker id: %s' % job_tc_worker_id)
@@ -45,7 +49,7 @@ class JobList(APIView):
                             status=status.HTTP_404_NOT_FOUND)
 
         logger.debug('Found TC worker id: %s' % tc_worker.id)
-        serializer.validated_data['worker_id'] = tc_worker.id
+        serializer.validated_data['tc_worker_id'] = tc_worker.id
 
         machine = tc_worker.machines.first()
         if not machine:

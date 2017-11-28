@@ -8,8 +8,6 @@ from . import views
 
 
 urlpatterns = [
-    # TODO: check TC supports registering options as query params
-    # GET /jobs/${job_id}/
-    url(r'^jobs$', views.JobList.as_view(), name='JobList'),
+    url(r'^workers/(?P<worker_id>[-_0-9a-zA-Z]{1,128})/group/(?P<worker_group>[-_0-9a-zA-Z]{1,128})/jobs$', views.JobList.as_view(), name='JobList'),
     url(r'^jobs/(?P<pk>[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12})$', views.JobDetail.as_view(), name='JobDetail'),
 ]
