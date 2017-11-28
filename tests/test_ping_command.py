@@ -21,7 +21,7 @@ from relops_hardware_controller.api.models import (
 )
 
 
-def test_ping_requires_host_or_machine_id():
+def test_ping_requires_host():
     with pytest.raises(CommandError):
         call_command('ping')
 
