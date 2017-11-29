@@ -7,6 +7,8 @@ import logging
 from uuid import UUID
 
 import django.http
+import taskcluster
+
 from rest_framework import (
     status,
 )
@@ -25,9 +27,30 @@ from relops_hardware_controller.celery import celery_call_command
 
 
 logger = logging.getLogger(__name__)
+auth_client = taskcluster.Auth()
 
+# Subclass this for any endpoint that requires authorization
+class AuthAPIView(APIView):
+    def isAuthorized(self, request, scopesets):
+        res = auth_client.authenticateHawk(
+                dict(method=request.META['REQUEST_METHOD'].lower(),
+                resource=request.META['PATH_INFO'],
+                host=request.META['HTTP_HOST'].split(':')[0],
+                port=int(request.META['PORT']),
+                authorization=request.META['HTTP_AUTHORIZATION']))
 
-class JobList(APIView):
+        if res['status'] != 'auth-success':
+            return {'success': False, 'message': res['message']}
+
+        if not taskcluster.scopeMatch(res['scopes'], scopesets):
+            return {
+                'success': False,
+                'message': ('Required scopes missing. Authorized scopes: {} ' +
+                           'Required Scopes: {}').format(res['scopes'], scopesets)
+            }
+        return {'success': True, 'message': ''}
+
+class JobList(AuthAPIView):
     """
     Create a new job to queue it.
     """
@@ -36,6 +59,14 @@ class JobList(APIView):
 
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # This scope is entirely arbitrary.  A better formed scope should probably
+        # be made.
+        authorized = self.isAuthorized(request,
+                [['project:relops-hardware-controller:{}'.format(serializer.validated_data['task_name'])]])
+        if not authorized['success']:
+            return Response(dict(error=authorized['message']),
+                            status=status.HTTP_401_UNAUTHORIZED)
 
         job_tc_worker_id = serializer.validated_data['tc_worker_id']
         tc_worker = TaskClusterWorker.objects.filter(tc_worker_id=job_tc_worker_id).first()
