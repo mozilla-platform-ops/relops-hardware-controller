@@ -23,7 +23,7 @@ RUN mkdir -p /usr/share/man/man1 \
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         apt-transport-https build-essential curl git libpq-dev \
-        postgresql-client
+        postgresql-client iputils-ping ipmitool
 
 # Clean up apt
 RUN apt-get autoremove -y && \
