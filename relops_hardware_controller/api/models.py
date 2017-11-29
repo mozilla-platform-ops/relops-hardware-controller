@@ -30,8 +30,8 @@ class Job(models.Model):
     "An action queued or run on a machine"
 
     # which TC worker we're running the job for
-    tc_worker_id = models.CharField(max_length=128)
-    worker = models.ForeignKey(
+    worker_id = models.CharField(max_length=128)
+    tc_worker = models.ForeignKey(
         to='TaskClusterWorker',
         on_delete=models.DO_NOTHING,
         null=False,

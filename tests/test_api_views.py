@@ -16,20 +16,23 @@ from relops_hardware_controller.api.models import (
 
 
 def test_job_list_returns_405_for_get(client):
-    response = client.get(
-        reverse('api:JobList'),
-        data=dict(worker_id='t-yosemite-r7-313',
-                  task_name='reboot'))
+    query_params = urlencode(dict(task_name='reboot'))
+    url = reverse('api:JobList',
+                  kwargs=dict(worker_id='t-yosemite-r7-313',
+                              worker_group='mdc1')) + '?' + query_params
+
+    response = client.get(url)
 
     assert response.status_code == 405
 
 
 @pytest.mark.django_db
-def test_job_list_returns_404_for_unknown_tc_worker_id(client):
-    query_params = urlencode(dict(tc_worker_id='tc-worker-1',
+def test_job_list_returns_404_for_unknown_worker_id(client):
+    query_params = urlencode(dict(worker_id='tc-worker-1',
                                   task_name='reboot'))
-
-    url = reverse('api:JobList') + '?' + query_params
+    url = reverse('api:JobList',
+                  kwargs=dict(worker_id='t-yosemite-r7-313',
+                              worker_group='mdc1')) + '?' + query_params
 
     response = client.post(url)
     print(response.content)
@@ -41,10 +44,10 @@ def test_job_list_returns_404_for_tc_worker_on_machine_we_do_not_manage(client):
     worker = TaskClusterWorker.objects.create(tc_worker_id='tc-worker-1')
     worker.save()
 
-    query_params = urlencode(dict(tc_worker_id='tc-worker-1',
-                                  task_name='reboot'))
-
-    url = reverse('api:JobList') + '?' + query_params
+    query_params = urlencode(dict(task_name='reboot'))
+    url = reverse('api:JobList',
+                  kwargs=dict(worker_id='tc-worker-1',
+                              worker_group='mdc1')) + '?' + query_params
 
     response = client.post(url)
     print(response.content)
@@ -59,10 +62,10 @@ def test_job_list_queues_job_for_valid_post(client):
     machine.workers.add(worker)
     machine.save()
 
-    query_params = urlencode(dict(tc_worker_id='tc-worker-1',
-                                  task_name='reboot'))
-
-    url = reverse('api:JobList') + '?' + query_params
+    query_params = urlencode(dict(task_name='reboot'))
+    url = reverse('api:JobList',
+                  kwargs=dict(worker_id='tc-worker-1',
+                              worker_group='mdc1')) + '?' + query_params
 
     response = client.post(url)
     print(response.content)
@@ -88,10 +91,10 @@ def test_job_detail_returns_job_status(client):
     machine = Machine.objects.create(host='localhost', ip='127.0.0.1')
     machine.workers.add(worker)
     machine.save()
-    job = Job.objects.create(tc_worker_id='tc-worker-1',
+    job = Job.objects.create(worker_id='tc-worker-1',
                              task_name='reboot',
                              task_id='e62c4d06-8101-4074-b3c2-c639005a4430',
-                             worker=worker,
+                             tc_worker=worker,
                              machine=machine)
     job.save()
 
