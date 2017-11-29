@@ -3,6 +3,10 @@
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
 import subprocess
+try:
+    import unittest.mock as mock
+except ImportError:
+    import mock
 import pytest
 
 from django.core.exceptions import ValidationError
@@ -31,27 +35,30 @@ def test_ping_rejects_invalid_host():
         call_command('ping', '; echo foo')
 
 
-@pytest.mark.slowtest
+@pytest.mark.requires_worker
 def test_ping_localhost_works():
     call_command('ping', 'localhost', count=1, timeout=1)
 
 
-@pytest.mark.slowtest
+@pytest.mark.requires_worker
 def test_ping_unroutable_ip_timesout():
     with pytest.raises(subprocess.TimeoutExpired):
         # Note: IP won't necessarily be unroutable
         call_command('ping', '198.51.100.0', count=1, timeout=1)
 
 
-@pytest.mark.slowtest
 @pytest.mark.django_db
 def test_ping_using_machine_id_works():
     tc_worker = {}
     machine = Machine.objects.create(host='localhost', ip='127.0.0.1')
     machine.save()
 
-    cmd_class = load_command_class('relops_hardware_controller.api', 'ping')
+    with mock.patch('subprocess.run') as run_mock:
+        cmd_class = load_command_class('relops_hardware_controller.api', 'ping')
 
-    args, kwargs = cmd_class.get_args_and_kwargs_from_job(tc_worker, MachineSerializer(machine).data)
+        args, kwargs = cmd_class.get_args_and_kwargs_from_job(tc_worker, MachineSerializer(machine).data)
 
-    call_command(cmd_class, *args, **kwargs)
+        call_command(cmd_class, *args, **kwargs)
+
+        assert run_mock.called
+        assert run_mock.call_args[0][0] == ['ping', '-c', '4', '-w', '5', 'localhost']
