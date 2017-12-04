@@ -61,7 +61,7 @@ class Base(Configuration):
 
     CONN_MAX_AGE = values.IntegerValue(60)
 
-    ALLOWED_HOSTS = []
+    ALLOWED_HOSTS = values.ListValue([])
 
     # Application definition
     INSTALLED_APPS = [
@@ -168,13 +168,16 @@ class Base(Configuration):
 
 class Dev(Base):
     DEBUG = True
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 class Prod(Base):
-    pass
+    ALLOWED_HOSTS = ['tools.taskcluster.net']
 
 
 class Test(Base):
     DEBUG = False
+
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
     SECRET_KEY = values.Value('not-so-secret-after-all')
