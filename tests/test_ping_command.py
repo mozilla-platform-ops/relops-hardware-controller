@@ -3,10 +3,7 @@
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
 import subprocess
-try:
-    import unittest.mock as mock
-except ImportError:
-    import mock
+import mock
 import pytest
 
 from django.core.exceptions import ValidationError
