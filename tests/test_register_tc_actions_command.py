@@ -4,11 +4,7 @@
 
 import subprocess
 
-try:
-    from unittest.mock import patch
-except ImportError:
-    from mock import patch
-
+from mock import patch
 import pytest
 
 from django.core.exceptions import ValidationError

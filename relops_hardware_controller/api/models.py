@@ -5,6 +5,28 @@
 from django.db import models
 from django.conf import settings
 from django_celery_results.models import TaskResult
+import taskcluster
+
+
+class TaskclusterUser:
+    """Stubs out the is_authenticated permission and sets TC scopes.
+
+    NB: not DB backed
+
+    In the future we might want to make this a proper django user and
+    map scopes to permissions.
+    """
+
+    def __init__(self, scopes, is_authenticated=False):
+        self.is_authenticated = is_authenticated
+        self.scopes = scopes
+
+    def is_authenticated(self):
+        return self.is_authenticated
+
+    def has_required_scopes(self, required_scope_sets):
+        # see: https://github.com/taskcluster/taskcluster-client.py#scopes
+        return taskcluster.utils.scopeMatch([self.scopes], required_scope_sets)
 
 
 class TaskClusterWorker(models.Model):

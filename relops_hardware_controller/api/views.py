@@ -10,19 +10,20 @@ import django.http
 from rest_framework import (
     status,
 )
+from django.conf import settings
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from .authentication import TaskclusterAuthentication
+from ..celery import celery_call_command
+from .permissions import HasTaskclusterScopes
 from .models import Job, Machine, TaskClusterWorker
 from .serializers import (
     JobSerializer,
     MachineSerializer,
     TaskClusterWorkerSerializer,
 )
-
-
-from relops_hardware_controller.celery import celery_call_command
-
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,15 @@ class JobList(APIView):
     """
     Create a new job to queue it.
     """
+    authentication_classes = (
+        TaskclusterAuthentication,
+    )
+    permission_classes = (
+        IsAuthenticated,
+        HasTaskclusterScopes,
+    )
+    required_taskcluster_scope_sets = settings.REQUIRED_TASKCLUSTER_SCOPE_SETS
+
     def post(self, request, worker_id, worker_group, format=None):
         serializer = JobSerializer(data=dict(
             worker_id=worker_id,
@@ -80,6 +90,7 @@ class JobDetail(APIView):
     """
     Returns a job's status.
     """
+
     def get_object(self, pk):
         try:
             return Job.objects.get(pk=UUID(pk))

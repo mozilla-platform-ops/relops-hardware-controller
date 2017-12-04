@@ -8,6 +8,7 @@ django-redis
 djangorestframework
 markdown
 mohawk
+pgpy
 psycopg2
 redis
 taskcluster
