@@ -151,6 +151,13 @@ class Base(Configuration):
     # And a 10 minute hard timeout.
     CELERY_TASK_TIME_LIMIT = CELERY_TASK_SOFT_TIME_LIMIT * 2
 
+    REST_FRAMEWORK = {
+        'DEFAULT_RENDERER_CLASSES': (
+            'rest_framework.renderers.JSONRenderer',
+            'rest_framework.renderers.BrowsableAPIRenderer',
+        )
+    }
+
     TASK_NAMES = [
         # 'loan',
         'reboot',
@@ -158,6 +165,8 @@ class Base(Configuration):
         # 'return_loan',
         'ping',
     ]
+
+    CORS_ORIGIN = values.Value()
 
     REQUIRED_TASKCLUSTER_SCOPE_SETS = [
         [
@@ -169,15 +178,18 @@ class Base(Configuration):
 class Dev(Base):
     DEBUG = True
     ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+    CORS_ORIGIN = 'localhost'
 
 
 class Prod(Base):
     ALLOWED_HOSTS = ['tools.taskcluster.net']
+    CORS_ORIGIN = 'tools.taskcluster.net'
 
 
 class Test(Base):
     DEBUG = False
 
     ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+    CORS_ORIGIN = 'localhost'
 
     SECRET_KEY = values.Value('not-so-secret-after-all')
