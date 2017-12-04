@@ -10,7 +10,12 @@ import django.http
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, authentication_classes, renderer_classes
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
+    renderer_classes,
+)
 from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -18,7 +23,10 @@ from rest_framework.response import Response
 
 from .authentication import TaskclusterAuthentication
 from ..celery import celery_call_command
-from .decorators import set_cors_headers
+from .decorators import (
+    set_cors_headers,
+    require_taskcluster_scope_sets,
+)
 from .permissions import HasTaskclusterScopes
 from .models import Job, Machine, TaskClusterWorker
 from .serializers import (
@@ -49,6 +57,7 @@ def queue_job_options(request, worker_id, worker_group, format=None):
     return Response({}, status=status.HTTP_200_OK)
 
 
+@require_taskcluster_scope_sets(settings.REQUIRED_TASKCLUSTER_SCOPE_SETS)
 @api_view(['POST'])
 @permission_classes((IsAuthenticated, HasTaskclusterScopes,))
 @authentication_classes((TaskclusterAuthentication,))
@@ -90,9 +99,6 @@ def queue_job_create(request, worker_id, worker_group, format=None):
     serializer.save()
 
     return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-queue_job.required_taskcluster_scope_sets = settings.REQUIRED_TASKCLUSTER_SCOPE_SETS
 
 
 class JobDetail(APIView):

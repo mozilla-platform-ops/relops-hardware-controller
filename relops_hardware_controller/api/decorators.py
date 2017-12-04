@@ -5,6 +5,8 @@
 
 from functools import wraps
 
+from .authentication import TaskclusterAuthentication
+
 
 def set_cors_headers(origin=None, methods='GET'):
     """Decorator function that sets CORS headers on the response."""
@@ -21,5 +23,20 @@ def set_cors_headers(origin=None, methods='GET'):
             return response
 
         return inner
+
+    return decorator
+
+
+def require_taskcluster_scope_sets(scope_sets):
+    """Decorator that sets required_taskcluster_scope_sets on the DRF
+    view and checks for TaskclusterAuthentication."""
+
+    def decorator(func):
+        func.view_class.required_taskcluster_scope_sets = scope_sets
+
+        assert TaskclusterAuthentication in func.view_class.authentication_classes, \
+          "Cannot require Taskcluster Scopes without TaskclusterAuthentication."
+
+        return func
 
     return decorator
