@@ -1,4 +1,4 @@
-Django
+Django==1.11
 celery
 dj-database-url
 django-configurations
