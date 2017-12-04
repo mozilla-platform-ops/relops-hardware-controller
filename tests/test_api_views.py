@@ -34,7 +34,8 @@ def get_hawk_auth_header(method, url, client_id=None, access_token=None, content
     ).request_header
 
 
-def test_job_list_returns_405_for_get(client):
+
+def test_job_list_returns_cors_headers_for_get(client):
     query_params = urlencode(dict(task_name='reboot'))
     url = reverse('api:JobList',
                   kwargs=dict(worker_id='t-yosemite-r7-313',
@@ -43,6 +44,22 @@ def test_job_list_returns_405_for_get(client):
     response = client.get(url)
 
     assert response.status_code == 405
+
+
+def test_job_list_returns_cors_headers_for_options(client):
+    query_params = urlencode(dict(task_name='reboot'))
+    uri = reverse('api:JobList',
+                  kwargs=dict(worker_id='tc-worker-1',
+                              worker_group='mdc1')) + '?' + query_params
+
+    host = '127.0.0.1:9091'
+    url = 'http://' + host + uri
+
+    response = client.options(uri)
+
+    assert response.status_code == 200
+    assert response.get('access-control-allow-origin') == 'localhost'
+    assert response.get('access-control-allow-methods') == 'OPTIONS,POST'
 
 
 @pytest.mark.django_db
@@ -103,6 +120,7 @@ def test_job_list_queues_job_for_valid_post(client, monkeypatch, mocker):
                            HTTP_HOST=host,
                            HTTP_CONTENT_TYPE='application/json',
                            HTTP_AUTHORIZATION=auth_header)
+    print('response.content', response.content)
 
     tc_client.return_value.authenticateHawk.assert_called_once_with({
         'method': 'post',
@@ -112,8 +130,9 @@ def test_job_list_queues_job_for_valid_post(client, monkeypatch, mocker):
         'authorization': auth_header,
     })
 
-    print(response.content)
     assert response.status_code == 201
+    assert response.get('access-control-allow-origin') == 'localhost'
+    assert response.get('access-control-allow-methods') == 'OPTIONS,POST'
     # assert response.json()['status'] == 'PENDING'
 
     job_id = UUID(response.json()['task_id'])
