@@ -151,6 +151,9 @@ class Base(Configuration):
     # And a 10 minute hard timeout.
     CELERY_TASK_TIME_LIMIT = CELERY_TASK_SOFT_TIME_LIMIT * 2
 
+    BUGZILLA_URL = values.URLValue()
+    BUGZILLA_API_KEY = values.SecretValue()
+
     REST_FRAMEWORK = {
         'DEFAULT_RENDERER_CLASSES': (
             'rest_framework.renderers.JSONRenderer',
@@ -179,6 +182,8 @@ class Dev(Base):
     DEBUG = True
     ALLOWED_HOSTS = ['localhost', '127.0.0.1']
     CORS_ORIGIN = 'localhost'
+
+    BUGZILLA_URL = 'https://landfill.bugzilla.org/bugzilla-5.0-branch/rest/'
 
 
 class Prod(Base):

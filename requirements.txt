@@ -11,4 +11,5 @@ mohawk
 pgpy
 psycopg2
 redis
+requests
 taskcluster
