@@ -159,6 +159,12 @@ class Base(Configuration):
         'ping',
     ]
 
+    REQUIRED_TASKCLUSTER_SCOPE_SETS = [
+        [
+            ['project:relops-hardware-controller:{}'.format(task_name)]
+        ] for task_name in TASK_NAMES
+    ]
+
 
 class Dev(Base):
     DEBUG = True
