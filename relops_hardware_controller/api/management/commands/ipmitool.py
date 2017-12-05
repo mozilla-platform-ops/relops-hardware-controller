@@ -115,7 +115,7 @@ class Command(BaseCommand):
         # TypeError: endswith first arg must be bytes or a tuple of bytes, not str
         output = subprocess.check_output(call_args,
                                          stderr=subprocess.STDOUT,
-                                        timeout=options['timeout'])
+                                         timeout=options['timeout'])
         if hasattr(output, 'decode'):
             return output.decode()
         else:
