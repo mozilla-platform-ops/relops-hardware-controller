@@ -31,7 +31,7 @@ def xen_session(api_server_uri, username, password):
 
 
 class Command(BaseCommand):
-    help = 'Reboots a server using snmp to powercycle its PDU.'
+    help = 'Reboots a server using XenAPI to performa a soft or hard powercycle.'
     doc_url = 'https://wiki.xenproject.org/wiki/Shutting_down_a_VM'
 
     def add_arguments(self, parser):

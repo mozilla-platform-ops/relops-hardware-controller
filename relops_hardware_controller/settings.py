@@ -158,6 +158,9 @@ class Base(Configuration):
     XEN_USERNAME = values.Value()
     XEN_PASSWORD = values.SecretValue()
 
+    ILO_USERNAME = values.Value()
+    ILO_PASSWORD = values.SecretValue()
+
     REST_FRAMEWORK = {
         'DEFAULT_RENDERER_CLASSES': (
             'rest_framework.renderers.JSONRenderer',
@@ -192,6 +195,8 @@ class Dev(Base):
     XEN_URL = 'https://xenapiserver/'
     XEN_USERNAME = 'xen_dev_username'
 
+    ILO_USERNAME = 'ilo_dev_username'
+
 
 class Prod(Base):
     ALLOWED_HOSTS = ['tools.taskcluster.net']
@@ -209,3 +214,6 @@ class Test(Base):
     XEN_URL = 'https://xenapiserver/'
     XEN_USERNAME = 'xen_dev_username'
     XEN_PASSWORD = values.Value('not-so-secret-after-all')
+
+    ILO_USERNAME = 'ilo_dev_username'
+    ILO_PASSWORD = values.Value('not-so-secret-ilo-pass-after-all')

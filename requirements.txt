@@ -10,6 +10,7 @@ markdown
 mohawk
 pgpy
 psycopg2
+python-hpilo
 redis
 requests
 taskcluster
