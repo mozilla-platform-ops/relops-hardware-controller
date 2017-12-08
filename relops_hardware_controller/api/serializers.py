@@ -14,11 +14,13 @@ class TaskClusterWorkerSerializer(serializers.ModelSerializer):
         model = TaskClusterWorker
         fields = '__all__'
 
+
 class MachineSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Machine
         fields = '__all__'
+
 
 class TaskResultSerializer(serializers.ModelSerializer):
 

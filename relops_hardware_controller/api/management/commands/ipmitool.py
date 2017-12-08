@@ -4,7 +4,7 @@ import re
 import subprocess
 
 from django.core.exceptions import ValidationError
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.core.validators import validate_ipv46_address
 
 
@@ -29,14 +29,17 @@ class Command(BaseCommand):
             '-H',
             dest='address',
             type=str,
-            help='Remote server address, can be IP address or hostname. This option is required for lan and lanplus interfaces.',
+            help='Remote server address, can be IP address or hostname. '
+            'This option is required for lan and lanplus interfaces.',
             required=True,
         )
         parser.add_argument(
             '-P',
             dest='password',
             type=str,
-            help='Remote server password is specified on the command line. If supported it will be obscured in the process list. Note! Specifying the password as a command line option is not recommended.',
+            help='Remote server password is specified on the command line. '
+            'If supported it will be obscured in the process list. Note! '
+            'Specifying the password as a command line option is not recommended.',
             required=True,
         )
         parser.add_argument(
@@ -53,14 +56,16 @@ class Command(BaseCommand):
             dest='interface',
             type=str,
             default='lanplus',
-            help='Selects IPMI interface to use. Supported interfaces that are compiled in are visible in the usage help output.',
+            help='Selects IPMI interface to use. Supported interfaces that'
+            'are compiled in are visible in the usage help output.',
         )
         parser.add_argument(
             '-L',
             dest='privlvl',
             type=str,
             default='ADMINISTRATOR',
-            help='Force session privilege level. Can be CALLBACK, USER, OPERATOR, ADMINISTRATOR. Default is ADMINISTRATOR.',
+            help='Force session privilege level. Can be CALLBACK, USER, '
+            'OPERATOR, ADMINISTRATOR. Default is ADMINISTRATOR.',
         )
         parser.add_argument(
             '-p',
@@ -86,7 +91,7 @@ class Command(BaseCommand):
             validate_ipv46_address(host)
 
     def validate_privlvl(self, privlvl):
-        if not privlvl in ['CALLBACK', 'USER', 'OPERATOR', 'ADMINISTRATOR']:
+        if privlvl not in ['CALLBACK', 'USER', 'OPERATOR', 'ADMINISTRATOR']:
             raise ValidationError('Invalid privlvl must be one of CALLBACK, USER, OPERATOR, or ADMINISTRATOR')
 
     def handle(self, command, *args, **options):

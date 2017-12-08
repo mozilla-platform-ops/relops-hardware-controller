@@ -1,17 +1,13 @@
 
 import functools
 import logging
-import re
-import subprocess
 from time import sleep
 
-from django.core.exceptions import ValidationError
 from django.core.management import (
     call_command,
     load_command_class,
 )
 from django.core.management.base import BaseCommand, CommandError
-from django.core.validators import validate_ipv46_address
 
 
 logger = logging.getLogger(__name__)
@@ -28,14 +24,17 @@ class Command(BaseCommand):
             '-H',
             dest='address',
             type=str,
-            help='Remote server address, can be IP address or hostname. This option is required for lan and lanplus interfaces.',
+            help='Remote server address, can be IP address or hostname. '
+            'This option is required for lan and lanplus interfaces.',
             required=True,
         )
         parser.add_argument(
             '-P',
             dest='password',
             type=str,
-            help='Remote server password is specified on the command line. If supported it will be obscured in the process list. Note! Specifying the password as a command line option is not recommended.',
+            help='Remote server password is specified on the command line. '
+            'If supported it will be obscured in the process list. Note! '
+            'Specifying the password as a command line option is not recommended.',
             required=True,
         )
         parser.add_argument(
@@ -52,14 +51,16 @@ class Command(BaseCommand):
             dest='interface',
             type=str,
             default='lanplus',
-            help='Selects IPMI interface to use. Supported interfaces that are compiled in are visible in the usage help output.',
+            help='Selects IPMI interface to use. Supported interfaces that are '
+            'compiled in are visible in the usage help output.',
         )
         parser.add_argument(
             '-L',
             dest='privlvl',
             type=str,
             default='ADMINISTRATOR',
-            help='Force session privilege level. Can be CALLBACK, USER, OPERATOR, ADMINISTRATOR. Default is ADMINISTRATOR.',
+            help='Force session privilege level. Can be CALLBACK, USER, OPERATOR,'
+            ' ADMINISTRATOR. Default is ADMINISTRATOR.',
         )
         parser.add_argument(
             '-p',
@@ -91,7 +92,6 @@ class Command(BaseCommand):
             type=int,
             help='Wait N seconds before turning the power back on.',
         )
-
 
     def handle(self, *args, **options):
         run_cmd = functools.partial(
@@ -127,17 +127,20 @@ class Command(BaseCommand):
                     logger.debug('{} ipmi found off in power status.'.format(options['address']))
                     break
             except CommandError as error:  # TODO: make this more specific
-                logger.debug('{} ipmi power status command raised: {}'.format(options['address'], error))
+                logger.debug('{} ipmi power status command raised:'
+                             ' {}'.format(options['address'], error))
 
             if seconds_waited >= options['power_status_wait']:
-                logger.debug('{} ipmi did not get power status off in {} seconds.'.format(options['address'], seconds_waited))
+                logger.debug('{} ipmi did not get power status off in {} '
+                             'seconds.'.format(options['address'], seconds_waited))
                 break
 
             sleep(wait_interval)
             seconds_waited += wait_interval
 
         # sleep for configurable delay (default 5s)
-        logger.debug('{} ipmi waiting for {} seconds before turning back on.'.format(options['address'], options['delay']))
+        logger.debug('{} ipmi waiting for {} seconds before turning back'
+                     ' on.'.format(options['address'], options['delay']))
         sleep(options['delay'])
 
         run_cmd('power', 'on')  # turn back on

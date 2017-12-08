@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
-import json
-import subprocess
 import mock
 import pytest
 
@@ -46,8 +44,8 @@ def test_file_bugzilla_bug_localhost_works():
                 'summary': 'localhost is unreachable',
                 'version': 'other',
                 'op_sys': 'All',
-                'platform': 'All'
-        })
+                'platform': 'All',
+            })
 
 
 @pytest.mark.bugzilla

@@ -28,7 +28,7 @@ from .decorators import (
     require_taskcluster_scope_sets,
 )
 from .permissions import HasTaskclusterScopes
-from .models import Job, Machine, TaskClusterWorker
+from .models import Job, TaskClusterWorker
 from .serializers import (
     JobSerializer,
     MachineSerializer,

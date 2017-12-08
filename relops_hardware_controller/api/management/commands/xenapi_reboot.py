@@ -1,16 +1,12 @@
 
 import contextlib
 import logging
-import re
-import subprocess
 import time
 
 import relops_hardware_controller.XenAPI as XenAPI
 
 from django.conf import settings
-from django.core.exceptions import ValidationError
-from django.core.management.base import BaseCommand, CommandError
-from django.core.validators import validate_ipv46_address
+from django.core.management.base import BaseCommand
 
 
 logger = logging.getLogger(__name__)
@@ -31,7 +27,7 @@ def xen_session(api_server_uri, username, password):
 
 
 class Command(BaseCommand):
-    help = 'Reboots a server using XenAPI to performa a soft or hard powercycle.'
+    help = 'Reboots a server using XenAPI.'
     doc_url = 'https://wiki.xenproject.org/wiki/Shutting_down_a_VM'
 
     def add_arguments(self, parser):

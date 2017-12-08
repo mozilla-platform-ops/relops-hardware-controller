@@ -3,7 +3,6 @@
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
-from urllib.parse import urlparse
 
 from django_redis import get_redis_connection
 

@@ -35,7 +35,7 @@ def require_taskcluster_scope_sets(scope_sets):
         func.view_class.required_taskcluster_scope_sets = scope_sets
 
         assert TaskclusterAuthentication in func.view_class.authentication_classes, \
-          "Cannot require Taskcluster Scopes without TaskclusterAuthentication."
+            "Cannot require Taskcluster Scopes without TaskclusterAuthentication."
 
         return func
 

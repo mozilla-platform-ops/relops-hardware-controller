@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
-import subprocess
-
 import mock
 import pytest
 
@@ -33,7 +31,9 @@ def test_ilo_reboot_requires_valid_arg(args):
     with pytest.raises(ValidationError):
         call_command('ilo_reboot', *args)
 
+
 # TODO: test invalid kwargs
+
 
 @pytest.mark.ilo_reboot
 def test_ilo_login_fails():
@@ -44,9 +44,9 @@ def test_ilo_login_fails():
             call_command('ilo_reboot', 'test.ilo.hostname', delay=1)
 
         mock_ilo_ctor.assert_called_once_with('test.ilo.hostname',
-                                            login='ilo_dev_username',
-                                            password='anything_ilo_password',
-                                            timeout=60)
+                                              login='ilo_dev_username',
+                                              password='anything_ilo_password',
+                                              timeout=60)
 
 
 @pytest.mark.ilo_reboot
@@ -59,9 +59,9 @@ def test_ilo_get_power_status_fails():
             call_command('ilo_reboot', 'test.ilo.hostname', delay=1)
 
         mock_ilo_ctor.assert_called_once_with('test.ilo.hostname',
-                                            login='ilo_dev_username',
-                                            password='anything_ilo_password',
-                                            timeout=60)
+                                              login='ilo_dev_username',
+                                              password='anything_ilo_password',
+                                              timeout=60)
 
         mock_ilo.get_host_power_status.assert_called_once_with()
 
@@ -75,9 +75,9 @@ def test_ilo_soft_reboot_success():
         call_command('ilo_reboot', 'test.ilo.hostname', delay=1)
 
         mock_ilo_ctor.assert_called_once_with('test.ilo.hostname',
-                                            login='ilo_dev_username',
-                                            password='anything_ilo_password',
-                                            timeout=60)
+                                              login='ilo_dev_username',
+                                              password='anything_ilo_password',
+                                              timeout=60)
 
         mock_ilo.get_host_power_status.assert_called_once_with()
         mock_ilo.reset_server.assert_called_once_with()
@@ -93,9 +93,9 @@ def test_ilo_hard_reboot_success():
         call_command('ilo_reboot', 'test.ilo.hostname', delay=1)
 
         mock_ilo_ctor.assert_called_once_with('test.ilo.hostname',
-                                            login='ilo_dev_username',
-                                            password='anything_ilo_password',
-                                            timeout=60)
+                                              login='ilo_dev_username',
+                                              password='anything_ilo_password',
+                                              timeout=60)
 
         mock_ilo.get_host_power_status.assert_called_once_with()
         mock_ilo.reset_server.assert_called_once_with()
@@ -117,9 +117,9 @@ def test_ilo_hard_reboot_power_off_fails():
             call_command('ilo_reboot', 'test.ilo.hostname', delay=1)
 
         mock_ilo_ctor.assert_called_once_with('test.ilo.hostname',
-                                            login='ilo_dev_username',
-                                            password='anything_ilo_password',
-                                            timeout=60)
+                                              login='ilo_dev_username',
+                                              password='anything_ilo_password',
+                                              timeout=60)
 
         mock_ilo.get_host_power_status.assert_called_once_with()
         mock_ilo.reset_server.assert_called_once_with()
@@ -142,9 +142,9 @@ def test_ilo_hard_reboot_power_on_fails():
             call_command('ilo_reboot', 'test.ilo.hostname', delay=1)
 
         mock_ilo_ctor.assert_called_once_with('test.ilo.hostname',
-                                            login='ilo_dev_username',
-                                            password='anything_ilo_password',
-                                            timeout=60)
+                                              login='ilo_dev_username',
+                                              password='anything_ilo_password',
+                                              timeout=60)
 
         mock_ilo.get_host_power_status.assert_called_once_with()
         mock_ilo.reset_server.assert_called_once_with()

@@ -12,7 +12,6 @@ from django.core.management import (
     load_command_class,
 )
 from django.core.management.base import CommandError
-from django.utils.six import StringIO
 
 from relops_hardware_controller.api.serializers import (
     MachineSerializer,

@@ -2,25 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
-import subprocess
-
 from mock import patch
 import pytest
 
 from django.core.exceptions import ValidationError
-from django.core.management import (
-    call_command,
-    load_command_class,
-)
+from django.core.management import call_command
 from django.core.management.base import CommandError
-from django.utils.six import StringIO
-
-from relops_hardware_controller.api.serializers import (
-    MachineSerializer,
-)
-from relops_hardware_controller.api.models import (
-    Machine,
-)
 
 
 def test_register_tc_actions_requires_provisioner_id(monkeypatch):

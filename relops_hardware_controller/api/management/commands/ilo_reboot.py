@@ -1,12 +1,10 @@
 
 import logging
 import re
-import subprocess
 import time
 
 from django.conf import settings
-from django.core.exceptions import ValidationError
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.core.validators import validate_ipv46_address
 import hpilo
 
@@ -61,7 +59,6 @@ class Command(BaseCommand):
         hostname_re = r'^[\.a-z0-9](?:[\.a-z0-9-]{0,61}[\.a-z0-9])?$'
         if not re.match(hostname_re, host):
             validate_ipv46_address(host)
-
 
     def handle(self, hostname, *args, **options):
         self.validate_host(hostname)

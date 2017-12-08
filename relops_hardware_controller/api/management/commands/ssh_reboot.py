@@ -3,7 +3,6 @@ import logging
 import re
 import subprocess
 
-from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
 from django.core.validators import validate_ipv46_address
 
@@ -12,7 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = 'Reboots a server with ssh. The account it uses should use ForceCommand to only run the reboot command. Raises an exception on timeout.'
+    help = '''Reboots a server with ssh. The account it uses should use
+    ForceCommand to only run the reboot command. Raises an exception on
+    timeout.'''
     doc_url = 'https://wiki.mozilla.org/Security/Guidelines/OpenSSH'
 
     def add_arguments(self, parser):
@@ -61,7 +62,7 @@ class Command(BaseCommand):
         # from the django URLValidator without unicode
         hostname_re = r'^[\.a-z0-9](?:[\.a-z0-9-]{0,61}[\.a-z0-9])?$'
         if not re.match(hostname_re, host):
-            validate_ipv46_address(hostn)
+            validate_ipv46_address(host)
 
     def handle(self, hostname, *args, **options):
         self.validate_host(hostname)
@@ -82,7 +83,6 @@ class Command(BaseCommand):
         ]
         logger.debug('ssh reboot with base args: {}'.format(' '.join(call_args)))
 
-        # From https://github.com/mozilla/build-slaveapi/blob/f2ef7726824908c0581dd4c622f231670e227db4/slaveapi/clients/ssh.py#L15-L20
         # By trying a few different reboot commands we don't need to special case
         # different types of hosts. The "shutdown" command is for Windows, but uses
         # hyphens because it gets run through a bash shell. We also delay the

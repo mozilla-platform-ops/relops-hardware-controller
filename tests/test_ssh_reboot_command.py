@@ -7,7 +7,6 @@ import subprocess
 import mock
 import pytest
 
-from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
@@ -41,6 +40,7 @@ reboot_commands = [
     'reboot',
     'shutdown -f -t 3 -r',
 ]
+
 
 @pytest.mark.ssh_reboot
 @pytest.mark.parametrize("reboot_command", reboot_commands, ids=lambda rc: rc)

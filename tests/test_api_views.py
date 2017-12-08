@@ -3,8 +3,6 @@
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-import contextlib
-import mock
 from uuid import UUID
 
 import mohawk
@@ -32,7 +30,6 @@ def get_hawk_auth_header(method, url, client_id=None, access_token=None, content
         content_type='application/json',
         method=method,
     ).request_header
-
 
 
 def test_job_list_returns_cors_headers_for_get(client):

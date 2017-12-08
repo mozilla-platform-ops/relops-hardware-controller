@@ -1,11 +1,8 @@
 
 import logging
-import json
 import re
-import subprocess
 
-from django.core.exceptions import ValidationError
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.core.validators import validate_ipv46_address
 import requests
 
@@ -65,6 +62,6 @@ class Command(BaseCommand):
         )
         logger.debug('file bug response: {}'.format(response.content))
         response.raise_for_status()
-        # will raise errors from invalid JSON too https://github.com/mozbhearsum/bzrest/blob/ae48450dda27ccfe9ac4ced26752fe0bc85770b8/bzrest/client.py#L63-L65
+        # will raise errors from invalid JSON too
         bug_id = response.json()["id"]
         logger.info('created bug {} for {}'.format(bug_id, host))
