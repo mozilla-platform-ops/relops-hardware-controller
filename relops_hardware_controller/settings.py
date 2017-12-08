@@ -154,6 +154,10 @@ class Base(Configuration):
     BUGZILLA_URL = values.URLValue()
     BUGZILLA_API_KEY = values.SecretValue()
 
+    XEN_URL = values.URLValue()
+    XEN_USERNAME = values.Value()
+    XEN_PASSWORD = values.SecretValue()
+
     REST_FRAMEWORK = {
         'DEFAULT_RENDERER_CLASSES': (
             'rest_framework.renderers.JSONRenderer',
@@ -185,6 +189,9 @@ class Dev(Base):
 
     BUGZILLA_URL = 'https://landfill.bugzilla.org/bugzilla-5.0-branch/rest/'
 
+    XEN_URL = 'https://xenapiserver/'
+    XEN_USERNAME = 'xen_dev_username'
+
 
 class Prod(Base):
     ALLOWED_HOSTS = ['tools.taskcluster.net']
@@ -198,3 +205,7 @@ class Test(Base):
     CORS_ORIGIN = 'localhost'
 
     SECRET_KEY = values.Value('not-so-secret-after-all')
+
+    XEN_URL = 'https://xenapiserver/'
+    XEN_USERNAME = 'xen_dev_username'
+    XEN_PASSWORD = values.Value('not-so-secret-after-all')
