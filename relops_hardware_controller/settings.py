@@ -210,6 +210,9 @@ class Test(Base):
 
     SECRET_KEY = values.Value('not-so-secret-after-all')
 
+    BUGZILLA_URL = 'https://landfill.bugzilla.org/bugzilla-5.0-branch/rest/'
+    BUGZILLA_API_KEY = values.Value('not-so-secret-after-all')
+
     XEN_URL = 'https://xenapiserver/'
     XEN_USERNAME = 'xen_dev_username'
     XEN_PASSWORD = values.Value('not-so-secret-after-all')
