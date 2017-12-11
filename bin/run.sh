@@ -30,7 +30,7 @@ wait_for() {
 # Only wait for backend services in development
 # http://stackoverflow.com/a/13864829
 # For example, bin/test.sh sets 'DEVELOPMENT' to something
-[ ! -z ${DEVELOPMENT+check} ] && wait_for db 5432
+[ ! -z ${DEVELOPMENT+check} ] && wait_for db 5432 && wait_for redis 6379
 
 case $1 in
   web)
