@@ -12,7 +12,6 @@ from django.core.management import (
     load_command_class,
 )
 from django.core.management.base import CommandError
-from django.utils.six import StringIO
 
 from relops_hardware_controller.api.serializers import (
     MachineSerializer,
@@ -37,10 +36,10 @@ def test_ping_localhost_works():
     call_command('ping', 'localhost', count=1, timeout=1)
 
 
+@pytest.mark.skip(reason='IP isn\'t always unroutable')
 @pytest.mark.requires_worker
 def test_ping_unroutable_ip_timesout():
     with pytest.raises(subprocess.TimeoutExpired):
-        # Note: IP won't necessarily be unroutable
         call_command('ping', '198.51.100.0', count=1, timeout=1)
 
 

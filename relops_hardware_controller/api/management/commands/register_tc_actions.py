@@ -13,7 +13,9 @@ from django.utils.http import urlencode
 
 
 class Command(BaseCommand):
-    help = 'Registers actions on a TC provisioner for HW management API tasks. Requires env vars TASKCLUSTER_CLIENT_ID and TASKCLUSTER_ACCESS_TOKEN with TC scope: queue:declare-provisioner:<my_provisioner_id>#actions'
+    help = '''Registers actions on a TC provisioner for HW management API
+tasks. Requires env vars TASKCLUSTER_CLIENT_ID and TASKCLUSTER_ACCESS_TOKEN
+with TC scope: queue:declare-provisioner:<my_provisioner_id>#actions'''
 
     def add_arguments(self, parser):
         # Positional arguments

@@ -38,8 +38,10 @@ services:
       service: base
     depends_on:
       - db
+      - redis
     links:
       - db
+      - redis
     command: test
 
   worker:

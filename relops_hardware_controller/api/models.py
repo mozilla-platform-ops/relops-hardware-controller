@@ -4,7 +4,6 @@
 
 from django.db import models
 from django.conf import settings
-from django_celery_results.models import TaskResult
 import taskcluster
 
 

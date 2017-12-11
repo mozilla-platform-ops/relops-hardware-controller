@@ -2,8 +2,7 @@
 import re
 import subprocess
 
-from django.core.exceptions import ValidationError
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.core.validators import validate_ipv46_address
 
 

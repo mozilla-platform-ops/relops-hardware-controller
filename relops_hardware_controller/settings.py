@@ -10,7 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
-import datetime
 import os
 
 from configurations import Configuration, values
@@ -210,6 +209,9 @@ class Test(Base):
     CORS_ORIGIN = 'localhost'
 
     SECRET_KEY = values.Value('not-so-secret-after-all')
+
+    BUGZILLA_URL = 'https://landfill.bugzilla.org/bugzilla-5.0-branch/rest/'
+    BUGZILLA_API_KEY = values.Value('not-so-secret-after-all')
 
     XEN_URL = 'https://xenapiserver/'
     XEN_USERNAME = 'xen_dev_username'

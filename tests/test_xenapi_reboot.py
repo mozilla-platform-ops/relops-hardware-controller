@@ -2,12 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
-import subprocess
-
 import mock
 import pytest
 
-from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
@@ -29,10 +26,12 @@ def test_xenapi_reboot_requires_arg(args):
 
 @pytest.mark.xenapi_reboot
 def test_xenapi_reboot_login_failure():
-    with mock.patch('relops_hardware_controller.api.management.commands.xenapi_reboot.XenAPI.Session') as mock_session_ctor:
+    with mock.patch('relops_hardware_controller.api.management.commands'
+                    '.xenapi_reboot.XenAPI.Session') as mock_session_ctor:
         mock_session = mock_session_ctor.return_value
 
-        mock_session.login_with_password.side_effect = Exception("XenAPI login failed.")
+        mock_session.login_with_password.side_effect = \
+            Exception("XenAPI login failed.")
 
         call_command('xenapi_reboot', 'test_xen_vm_uuid', delay=1)
 
@@ -45,7 +44,8 @@ def test_xenapi_reboot_login_failure():
 
 @pytest.mark.xenapi_reboot
 def test_xenapi_soft_reboot_success():
-    with mock.patch('relops_hardware_controller.api.management.commands.xenapi_reboot.XenAPI.Session') as mock_session_ctor:
+    with mock.patch('relops_hardware_controller.api.management.commands'
+                    '.xenapi_reboot.XenAPI.Session') as mock_session_ctor:
         mock_session = mock_session_ctor.return_value
         mock_vm = mock_session.xenapi.VM.get_by_uuid.return_value
 
@@ -65,7 +65,8 @@ def test_xenapi_soft_reboot_success():
 
 @pytest.mark.xenapi_reboot
 def test_xenapi_hard_reboot_success():
-    with mock.patch('relops_hardware_controller.api.management.commands.xenapi_reboot.XenAPI.Session') as mock_session_ctor:
+    with mock.patch('relops_hardware_controller.api.management.commands'
+                    '.xenapi_reboot.XenAPI.Session') as mock_session_ctor:
         mock_session = mock_session_ctor.return_value
         mock_vm = mock_session.xenapi.VM.get_by_uuid.return_value
 
@@ -87,7 +88,8 @@ def test_xenapi_hard_reboot_success():
 
 @pytest.mark.xenapi_reboot
 def test_xenapi_reboot_shutdown_failure():
-    with mock.patch('relops_hardware_controller.api.management.commands.xenapi_reboot.XenAPI.Session') as mock_session_ctor:
+    with mock.patch('relops_hardware_controller.api.management.commands'
+                    '.xenapi_reboot.XenAPI.Session') as mock_session_ctor:
         mock_session = mock_session_ctor.return_value
         mock_vm = mock_session.xenapi.VM.get_by_uuid.return_value
 
