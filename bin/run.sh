@@ -8,7 +8,7 @@ set -eo pipefail
 : "${GUNICORN_WORKERS:=4}"
 
 usage() {
-  echo "usage: ./bin/run.sh web|web-dev|worker|test|bash|superuser"
+  echo "usage: ./bin/run.sh web|web-dev|worker|test|bash|manage.py"
   exit 1
 }
 
@@ -56,8 +56,9 @@ case $1 in
     # For developing workers purge the queue and restart the worker when a python file changes
     exec watchmedo auto-restart --recursive -d /app -p '*.py' -- celery -A relops_hardware_controller.celery:app worker -l debug --purge
     ;;
-  superuser)
-    exec python manage.py superuser "${@:2}"
+  manage.py)
+    # For testing custom management commands directly from docker
+    exec python manage.py "${@:2}"
     ;;
   test)
     # python manage.py collectstatic --noinput

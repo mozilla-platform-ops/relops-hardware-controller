@@ -86,9 +86,16 @@ Examples response:
 1. If necessary, change the `TaskClusterWorker` or `Machine` models or their serializers and run `./manage.py makemigrations`
 1. If necessary, add secrets like ssh keys to the celery worker config or container (TODO: add example)
 
-##### Test it runs from the API
+##### Test it
+
+###### from the docker image
+
+1. After running `make clean build`, try running it from docker e.g. with `docker-compose run web python manage.py ping 127.0.0.1`
+
+###### from the API
 
 1. Run a command like `curl -v -w '\n' -X POST -H 'Accept: application/json' -H 'Content-Type: application/json' http://localhost:8000/api/v1/jobs\?tc_worker_id\=tc-worker-1\&task_name\=ping` and check that the worker runs it.
+
 
 ##### TODO: permissions, deployment, register with TC
 
