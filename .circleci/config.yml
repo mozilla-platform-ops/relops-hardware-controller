@@ -77,6 +77,14 @@ jobs:
             cp .env-dist .env
             make test
 
+      - store_artifacts:
+          path: ~/roller/coverage.xml
+          destination: coverage.xml
+
+      - store_artifacts:
+          path: ~/roller/htmlcov
+          destination: htmlcov/
+
 
 workflows:
   version: 2
