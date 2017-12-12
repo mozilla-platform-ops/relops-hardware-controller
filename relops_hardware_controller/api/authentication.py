@@ -12,8 +12,6 @@ logger = logging.getLogger(__name__)
 
 class TaskclusterAuthentication(authentication.BaseAuthentication):
 
-    tc_client = taskcluster.Auth()
-
     def authenticate(self, request):
         """A DRF authentication class.
 
@@ -24,6 +22,10 @@ class TaskclusterAuthentication(authentication.BaseAuthentication):
         When behind a proxy enable the djanog USE_X_FORWARDED_PORT settings should be enable to use the right port.
         https://docs.djangoproject.com/en/1.11/ref/settings/#std:setting-USE_X_FORWARDED_PORT
         """
+        if request.method == 'OPTIONS':
+            return None, None
+
+        tc_client = taskcluster.Auth()
 
         # auth input schema:
         # http://schemas.taskcluster.net/auth/v1/authenticate-hawk-request.json
@@ -35,9 +37,11 @@ class TaskclusterAuthentication(authentication.BaseAuthentication):
             authorization=request.META.get('HTTP_AUTHORIZATION', ''))
 
         # auth output schema: http://schemas.taskcluster.net/auth/v1/authenticate-hawk-response.json
-        auth_response = self.tc_client.authenticateHawk(payload)
+        print('tc client: %s %s', tc_client, payload)
 
-        logger.debug('tc auth response: %s' % auth_response)
+        auth_response = tc_client.authenticateHawk(payload)
+
+        logger.warn('tc auth response: %s' % auth_response)
 
         if 'status' not in auth_response:
             raise exceptions.AuthenticationFailed('\'status\' not found invalid auth response')

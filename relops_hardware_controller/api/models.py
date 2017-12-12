@@ -25,7 +25,7 @@ class TaskclusterUser:
 
     def has_required_scopes(self, required_scope_sets):
         # see: https://github.com/taskcluster/taskcluster-client.py#scopes
-        return taskcluster.utils.scopeMatch([self.scopes], required_scope_sets)
+        return taskcluster.utils.scopeMatch(self.scopes, required_scope_sets)
 
 
 class TaskClusterWorker(models.Model):

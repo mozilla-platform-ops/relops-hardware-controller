@@ -161,6 +161,8 @@ class Base(Configuration):
     ILO_PASSWORD = values.SecretValue()
 
     REST_FRAMEWORK = {
+        'DEFAULT_AUTHENTICATION_CLASSES': (
+        ),
         'DEFAULT_RENDERER_CLASSES': (
             'rest_framework.renderers.JSONRenderer',
             'rest_framework.renderers.BrowsableAPIRenderer',
@@ -169,7 +171,7 @@ class Base(Configuration):
 
     TASK_NAMES = [
         # 'loan',
-        'reboot',
+        # 'reboot',
         # 'reimage',
         # 'return_loan',
         'ping',
@@ -177,10 +179,12 @@ class Base(Configuration):
 
     CORS_ORIGIN = values.Value()
 
+    TASKCLUSTER_CLIENT_ID = values.Value('')
+    TASKCLUSTER_ACCESS_TOKEN = values.SecretValue()
+
     REQUIRED_TASKCLUSTER_SCOPE_SETS = [
-        [
-            ['project:relops-hardware-controller:{}'.format(task_name)]
-        ] for task_name in TASK_NAMES
+        ['project:relops-hardware-controller:{}'.format(task_name)]
+        for task_name in TASK_NAMES
     ]
 
 
@@ -195,6 +199,9 @@ class Dev(Base):
     XEN_USERNAME = 'xen_dev_username'
 
     ILO_USERNAME = 'ilo_dev_username'
+
+    TASKCLUSTER_CLIENT_ID = ''
+    TASKCLUSTER_ACCESS_TOKEN = values.Value('')
 
 
 class Prod(Base):
@@ -219,3 +226,6 @@ class Test(Base):
 
     ILO_USERNAME = 'ilo_dev_username'
     ILO_PASSWORD = values.Value('not-so-secret-ilo-pass-after-all')
+
+    TASKCLUSTER_CLIENT_ID = ''
+    TASKCLUSTER_ACCESS_TOKEN = values.Value('')
