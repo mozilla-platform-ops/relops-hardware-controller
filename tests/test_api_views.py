@@ -40,7 +40,7 @@ def has_cors_headers(response):
 
 
 def test_job_list_returns_cors_headers_for_unauthed_options(client):
-    query_params = urlencode(dict(task_name='reboot'))
+    query_params = urlencode(dict(task_name='ping'))
     uri = reverse('api:JobList',
                   kwargs=dict(worker_id='tc-worker-1',
                               worker_group='mdc1')) + '?' + query_params
@@ -52,7 +52,7 @@ def test_job_list_returns_cors_headers_for_unauthed_options(client):
 
 
 def test_job_list_returns_405_for_authed_get(client):
-    query_params = urlencode(dict(task_name='reboot'))
+    query_params = urlencode(dict(task_name='ping'))
     uri = reverse('api:JobList',
                   kwargs=dict(worker_id='tc-worker-1',
                               worker_group='mdc1')) + '?' + query_params
@@ -64,7 +64,7 @@ def test_job_list_returns_405_for_authed_get(client):
     with mock.patch('taskcluster.Auth') as tc_auth_ctor:
         tc_client = tc_auth_ctor.return_value
         tc_client.authenticateHawk.return_value = {
-            'scopes': ['project:relops-hardware-controller:reboot'],
+            'scopes': ['project:relops-hardware-controller:ping'],
             'status': 'auth-success',
         }
         response = client.get(url,
@@ -87,7 +87,7 @@ def test_job_list_returns_405_for_authed_get(client):
 
 @pytest.mark.django_db
 def test_job_list_returns_404_for_unknown_worker_id(client):
-    query_params = urlencode(dict(task_name='reboot'))
+    query_params = urlencode(dict(task_name='ping'))
     uri = reverse('api:JobList',
                   kwargs=dict(worker_id='t-yosemite-r7-313',
                               worker_group='mdc1')) + '?' + query_params
@@ -99,7 +99,7 @@ def test_job_list_returns_404_for_unknown_worker_id(client):
     with mock.patch('taskcluster.Auth') as tc_auth_ctor:
         tc_client = tc_auth_ctor.return_value
         tc_client.authenticateHawk.return_value = {
-            'scopes': ['project:relops-hardware-controller:reboot'],
+            'scopes': ['project:relops-hardware-controller:ping'],
             'status': 'auth-success',
         }
         response = client.post(url,
@@ -128,7 +128,7 @@ def test_job_list_returns_404_for_tc_worker_on_machine_we_do_not_manage(client):
     worker = TaskClusterWorker.objects.create(tc_worker_id='tc-worker-1')
     worker.save()
 
-    query_params = urlencode(dict(task_name='reboot'))
+    query_params = urlencode(dict(task_name='ping'))
     uri = reverse('api:JobList',
                   kwargs=dict(worker_id='tc-worker-1',
                               worker_group='mdc1')) + '?' + query_params
@@ -140,7 +140,7 @@ def test_job_list_returns_404_for_tc_worker_on_machine_we_do_not_manage(client):
     with mock.patch('taskcluster.Auth') as tc_auth_ctor:
         tc_client = tc_auth_ctor.return_value
         tc_client.authenticateHawk.return_value = {
-            'scopes': ['project:relops-hardware-controller:reboot'],
+            'scopes': ['project:relops-hardware-controller:ping'],
             'status': 'auth-success',
         }
 
@@ -170,7 +170,7 @@ def test_job_list_queues_job_for_valid_post(client):
     machine.workers.add(worker)
     machine.save()
 
-    query_params = urlencode(dict(task_name='reboot'))
+    query_params = urlencode(dict(task_name='ping'))
     uri = reverse('api:JobList',
                   kwargs=dict(worker_id='tc-worker-1',
                               worker_group='mdc1')) + '?' + query_params
@@ -182,7 +182,7 @@ def test_job_list_queues_job_for_valid_post(client):
     with mock.patch('taskcluster.Auth') as tc_auth_ctor:
         tc_client = tc_auth_ctor.return_value
         tc_client.authenticateHawk.return_value = {
-            'scopes': ['project:relops-hardware-controller:reboot'],
+            'scopes': ['project:relops-hardware-controller:ping'],
             'status': 'auth-success',
         }
 
@@ -214,7 +214,7 @@ def test_job_list_queues_job_for_valid_post(client):
 
 @pytest.mark.django_db
 def test_job_list_requires_auth_header_for_post(client):
-    query_params = urlencode(dict(task_name='reboot'))
+    query_params = urlencode(dict(task_name='ping'))
     uri = reverse('api:JobList',
                   kwargs=dict(worker_id='tc-worker-1',
                               worker_group='mdc1')) + '?' + query_params
@@ -240,7 +240,7 @@ def test_job_list_requires_auth_header_for_post(client):
 
 @pytest.mark.django_db
 def test_job_list_requires_status_in_auth_response(client):
-    query_params = urlencode(dict(task_name='reboot'))
+    query_params = urlencode(dict(task_name='ping'))
     uri = reverse('api:JobList',
                   kwargs=dict(worker_id='tc-worker-1',
                               worker_group='mdc1')) + '?' + query_params
@@ -252,7 +252,7 @@ def test_job_list_requires_status_in_auth_response(client):
     with mock.patch('taskcluster.Auth') as tc_auth_ctor:
         tc_client = tc_auth_ctor.return_value
         tc_client.authenticateHawk.return_value = {
-            'scopes': ['project:relops-hardware-controller:reboot'],
+            'scopes': ['project:relops-hardware-controller:ping'],
         }
 
         response = client.post(uri,
@@ -277,7 +277,7 @@ def test_job_list_requires_status_in_auth_response(client):
 
 @pytest.mark.django_db
 def test_job_list_returns_403_for_status_failed_in_auth_response(client):
-    query_params = urlencode(dict(task_name='reboot'))
+    query_params = urlencode(dict(task_name='ping'))
     uri = reverse('api:JobList',
                   kwargs=dict(worker_id='tc-worker-1',
                               worker_group='mdc1')) + '?' + query_params
@@ -289,7 +289,7 @@ def test_job_list_returns_403_for_status_failed_in_auth_response(client):
     with mock.patch('taskcluster.Auth') as tc_auth_ctor:
         tc_client = tc_auth_ctor.return_value
         tc_client.authenticateHawk.return_value = {
-            'scopes': ['project:relops-hardware-controller:reboot'],
+            'scopes': ['project:relops-hardware-controller:ping'],
             'status': 'auth-failed',
         }
 
@@ -315,7 +315,7 @@ def test_job_list_returns_403_for_status_failed_in_auth_response(client):
 
 @pytest.mark.django_db
 def test_job_list_returns_403_for_wtf_status_in_auth_response(client):
-    query_params = urlencode(dict(task_name='reboot'))
+    query_params = urlencode(dict(task_name='ping'))
     uri = reverse('api:JobList',
                   kwargs=dict(worker_id='tc-worker-1',
                               worker_group='mdc1')) + '?' + query_params
@@ -327,7 +327,7 @@ def test_job_list_returns_403_for_wtf_status_in_auth_response(client):
     with mock.patch('taskcluster.Auth') as tc_auth_ctor:
         tc_client = tc_auth_ctor.return_value
         tc_client.authenticateHawk.return_value = {
-            'scopes': ['project:relops-hardware-controller:reboot'],
+            'scopes': ['project:relops-hardware-controller:ping'],
             'status': 'wtf',
         }
 
@@ -359,7 +359,7 @@ def test_job_list_returns_403_for_no_task_name_scopes(client):
     machine.workers.add(worker)
     machine.save()
 
-    query_params = urlencode(dict(task_name='reboot'))
+    query_params = urlencode(dict(task_name='ping'))
     uri = reverse('api:JobList',
                   kwargs=dict(worker_id='tc-worker-1',
                               worker_group='mdc1')) + '?' + query_params
@@ -404,7 +404,7 @@ def test_job_list_returns_403_for_different_task_name_scope(client):
     machine.workers.add(worker)
     machine.save()
 
-    query_params = urlencode(dict(task_name='reboot'))
+    query_params = urlencode(dict(task_name='ping'))
     uri = reverse('api:JobList',
                   kwargs=dict(worker_id='tc-worker-1',
                               worker_group='mdc1')) + '?' + query_params
@@ -416,7 +416,7 @@ def test_job_list_returns_403_for_different_task_name_scope(client):
     with mock.patch('taskcluster.Auth') as tc_auth_ctor:
         tc_client = tc_auth_ctor.return_value
         tc_client.authenticateHawk.return_value = {
-            'scopes': ['project:relops-hardware-controller:not-reboot'],
+            'scopes': ['project:relops-hardware-controller:not-ping'],
             'status': 'auth-success',
         }
 
@@ -456,7 +456,7 @@ def test_job_detail_returns_job_status(client):
     machine.workers.add(worker)
     machine.save()
     job = Job.objects.create(worker_id='tc-worker-1',
-                             task_name='reboot',
+                             task_name='ping',
                              task_id='e62c4d06-8101-4074-b3c2-c639005a4430',
                              tc_worker=worker,
                              machine=machine)
