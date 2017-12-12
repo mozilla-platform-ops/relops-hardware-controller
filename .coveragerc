@@ -10,4 +10,7 @@ omit =
     *migrations*
 
 [xml]
-output = /tmp/coverage.xml
+output = /app/coverage.xml
+
+[html]
+directory = /app/htmlcov
