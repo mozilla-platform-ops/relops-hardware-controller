@@ -63,20 +63,11 @@ case $1 in
     coverage erase
     coverage run -m pytest --flake8 "${@:2}"
     coverage report -m
-    if [[ -z ${CI+check} ]]; then
-      # generate code coverage to disk
-      coverage html --skip-covered
-    fi
-    # Temporarily disabled. The team is small and codecov's report inside
-    # pull requests (as comments) is more noise than help.
-    # Also, code coverage is mostly useful when contributors help and
-    # add more code without adding tests to cover.
-    # if [[ ! -z ${CI+check} ]]; then
-    #   # submit coverage
-    #   coverage xml
-    #   env
-    #   bash <(curl -s https://codecov.io/bash) -s /tmp
-    # fi
+    # generate code coverage to disk
+    mkdir -p /app/htmlcov
+    coverage html --skip-covered -d /app/htmlcov
+    # submit coverage
+    coverage xml
     ;;
   bash)
     echo "For high-speed test development, run: ptw"
