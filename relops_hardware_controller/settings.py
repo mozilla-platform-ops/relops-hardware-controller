@@ -171,7 +171,7 @@ class Base(Configuration):
 
     TASK_NAMES = [
         # 'loan',
-        'reboot',
+        # 'reboot',
         # 'reimage',
         # 'return_loan',
         'ping',
