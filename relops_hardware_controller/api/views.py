@@ -41,6 +41,7 @@ logger = logging.getLogger(__name__)
 @csrf_exempt
 @set_cors_headers(origin=settings.CORS_ORIGIN, methods=['OPTIONS', 'POST'])
 @api_view(['OPTIONS', 'POST'])
+@authentication_classes((TaskclusterAuthentication,))
 @renderer_classes((JSONRenderer,))
 def queue_job(request, worker_id, worker_group, format=None):
     if request.method == 'OPTIONS':
@@ -59,8 +60,8 @@ def queue_job_options(request, worker_id, worker_group, format=None):
 
 @require_taskcluster_scope_sets(settings.REQUIRED_TASKCLUSTER_SCOPE_SETS)
 @api_view(['POST'])
-@permission_classes((IsAuthenticated, HasTaskclusterScopes,))
 @authentication_classes((TaskclusterAuthentication,))
+@permission_classes((IsAuthenticated, HasTaskclusterScopes,))
 @renderer_classes((JSONRenderer,))
 def queue_job_create(request, worker_id, worker_group, format=None):
     serializer = JobSerializer(data=dict(
