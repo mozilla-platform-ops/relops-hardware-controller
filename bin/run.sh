@@ -59,6 +59,7 @@ case $1 in
     exec python manage.py "${@:2}"
     ;;
   test)
+    set -v
     # python manage.py collectstatic --noinput
     coverage erase
     coverage run -m pytest --flake8 "${@:2}"
