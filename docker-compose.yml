@@ -1,8 +1,6 @@
 version: '2'
 
 services:
-  db:
-    image: postgres:9.6
   redis:
     image: redis:3.2
 
@@ -22,12 +20,10 @@ services:
     extends:
       service: base
     depends_on:
-      - db
       - redis
     ports:
       - "8000:8000"
     links:
-      - db
       - redis
     volumes:
       - $PWD:/app
@@ -37,10 +33,8 @@ services:
     extends:
       service: base
     depends_on:
-      - db
       - redis
     links:
-      - db
       - redis
     command: test
 
@@ -50,7 +44,6 @@ services:
     depends_on:
       - base
     links:
-      - db
       - redis
     volumes:
       - $PWD:/app
@@ -62,7 +55,6 @@ services:
     depends_on:
       - base
     links:
-      - db
       - redis
     volumes:
       - $PWD:/app
