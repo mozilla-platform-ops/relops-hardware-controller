@@ -13,13 +13,6 @@ from django.core.management import (
 )
 from django.core.management.base import CommandError
 
-from relops_hardware_controller.api.serializers import (
-    MachineSerializer,
-)
-from relops_hardware_controller.api.models import (
-    Machine,
-)
-
 
 def test_ping_requires_host():
     with pytest.raises(CommandError):
@@ -41,20 +34,3 @@ def test_ping_localhost_works():
 def test_ping_unroutable_ip_timesout():
     with pytest.raises(subprocess.TimeoutExpired):
         call_command('ping', '198.51.100.0', count=1, timeout=1)
-
-
-@pytest.mark.django_db
-def test_ping_using_machine_id_works():
-    tc_worker = {}
-    machine = Machine.objects.create(host='localhost', ip='127.0.0.1')
-    machine.save()
-
-    with mock.patch('subprocess.run') as run_mock:
-        cmd_class = load_command_class('relops_hardware_controller.api', 'ping')
-
-        args, kwargs = cmd_class.get_args_and_kwargs_from_job(tc_worker, MachineSerializer(machine).data)
-
-        call_command(cmd_class, *args, **kwargs)
-
-        assert run_mock.called
-        assert run_mock.call_args[0][0] == ['ping', '-c', '4', '-w', '5', 'localhost']
