@@ -24,8 +24,12 @@ class JobSerializer(serializers.Serializer):
         r'^({})$'.format('|'.join(settings.TASK_NAMES)),
         required=True)
 
-    # which TC worker we're running the job for
-    taskcluster_worker_id = serializers.CharField(
+    # which TC worker callback args
+    worker_id = serializers.CharField(
         max_length=128,
         min_length=1,
         required=True)
+    worker_group = serializers.CharField(
+        max_length=128,
+        min_length=1,
+        required=False)
