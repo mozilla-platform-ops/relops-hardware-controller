@@ -1,9 +1,11 @@
 ## relops-hardware-controller aka Release Operations Controller or "roller"
 
-A service for managing Fx release operations hardware and rewrite of
-[the build-slaveapi](https://github.com/mozilla/build-slaveapi) to
-help migrate from [buildbot](http://buildbot.net/) to
-[taskcluster](https://github.com/taskcluster).
+A service for managing Fx release operations (RelOps) hardware and
+rewrite of [the
+build-slaveapi](https://github.com/mozilla/build-slaveapi) to help
+migrate from [buildbot](http://buildbot.net/) to
+[taskcluster](https://github.com/taskcluster). The code is based on
+[tecken](https://github.com/mozilla-services/tecken).
 
 ### Architecture
 
@@ -18,14 +20,14 @@ help migrate from [buildbot](http://buildbot.net/) to
 |            <-------+              <-----+                <-----+           |     +--------+  |
 |            |   |   |              |     |                |     |           |                 |
 +------------+   |   +----+---+-----+     +----------------+     |           |     +--------+  |
-                 |        |   |                                  |           +----->        |  |
-                 |     +--+---+---+                              |           |     |  HW 2  |  |
-                 |     |          |                              |           <-----+        |  |
-                 |     |    DB    |                              |           |     +--------+  |
-                 |     |          |                              |           |                 |
-                 |     |          |                              |           |     +--------+  |
-                 |     |          |                              |           +----->        |  |
-                 |     +----------+                              |           |     |  HW 3  |  |
+                 |                                               |           +----->        |  |
+                 |                                               |           |     |  HW 2  |  |
+                 |                                               |           <-----+        |  |
+                 |                                               |           |     +--------+  |
+                 |                                               |           |                 |
+                 |                                               |           |     +--------+  |
+                 |                                               |           +----->        |  |
+                 |                                               |           |     |  HW 3  |  |
                  |                                               |           <-----+        |  |
                  |                                               +-----------+     +--------+  |
                  |                                                                             |
@@ -35,7 +37,7 @@ help migrate from [buildbot](http://buildbot.net/) to
 
 ### Data flow
 
-![sequence diagram](docs/sequence_diagram.png)
+![sequence diagram from https://mermaidjs.github.io/mermaid-live-editor/#/edit/c2VxdWVuY2VEaWFncmFtCiAgICBwYXJ0aWNpcGFudCB0YyBhcyBVc2VyIGxvZ2dlZCBpbnRvIFRhc2tjbHVzdGVyIERhc2hib2FyZCAKICAgIHBhcnRpY2lwYW50IHJhIGFzIFJvbGxlciBBUEkKICAgIHBhcnRpY2lwYW50IHJkYiBhcyBSb2xsZXIgREIKICAgIHBhcnRpY2lwYW50IHJxIGFzIFJvbGxlciBRdWV1ZQogICAgcGFydGljaXBhbnQgdyBhcyBXb3JrZXIKICAKICAgIE5vdGUgbGVmdCBvZiB0YzogU2hlcmlmZiBvciBSZWxPcHMgT3AgY2xpY2tzIGFuIGFjdGlvbiBidXR0b24gKHJlYm9vdCwgcmVpbWFnZSwgbG9hbiwgZXRjLikKCiAgICAgICAgdGMtPj5yYTogT1BUSU9OUyAvYXBpL3YxL2pvYnM_dGFza19uYW1lPSRhY3Rpb24mdGNfd29ya2VyX2lkPXRjLXdvcmtlci11bm8KICAgICAgICByYS0-PnRjOiAyMDAgT0sKCiAgICAgICAgdGMtPj5yYTogUE9TVCAvYXBpL3YxL2pvYnM_dGFza19uYW1lPSRhY3Rpb24mdGNfd29ya2VyX2lkPXRjLXdvcmtlci11bm8KCiAgICAgICAgcmEtPj5yZGI6IEZpbmQgbWFjaGluZSBmb3IgJ3RjLXdvcmtlci11bm8nCiAgICAgICAgcmRiLT4-cmE6IEZvdW5kIG1hY2hpbmUgbTEgCgogICAgICAgIHJhLT4-cnE6IHF1ZXVlICRhY3Rpb24gb24gbTE_CiAgICAgICAgcnEtPj5yYTogcXVldWVkIHdpdGggdGFza19pZCAyCgogICAgICAgIHJxLT4-dzogcnVuICRhY3Rpb24gb24gbTEKCiAgICAgICAgcmEtPj5yZGI6IHNhdmUgam9iPwogICAgICAgIHJkYi0-PnJhOiBzYXZlZCEKCiAgICAgICAgcmEtPj50YzogMjAxIENyZWF0ZWQgeyJ0YXNrX2lkIjogMi4uLn0gCiAgICAgICAgdGMtPj5yYTogR0VUIC9hcGkvdjEvam9icy8yCiAgICAgICAgcmEtPj50YzogMjAwIE9LIHtzdGF0dXM6ICJSVU5OSU5HIn0KCiAgICAgICAgdy0-PnJxOiBGaW5pc2hlZCAkYWN0aW9uIG9uIG0xCgogICAgICAgIHRjLT4-cmE6IEdFVCAvYXBpL3YxL2pvYnMvMgogICAgICAgIHJhLT4-dGM6IDIwMCBPSyB7c3RhdHVzOiAiQ09NUExFVEUifQo](docs/sequence_diagram.png)
 
 ### API (TODO: add schemas)
 
@@ -61,7 +63,7 @@ The task_id is the Celery Task ID.
 
 #### Build and run the web and worker containers
 
-1. `make start-web start-worker` Note: the first time the web worker starts up the DB connection will likely fail so run it again (refs: #5)
+1. `make start-web start-worker`
 
 #### Adding a public HW management task
 
@@ -75,8 +77,7 @@ The task_id is the Celery Task ID.
 
 1. In `relops_hardware_controller/settings.py` add the command name to `TASK_NAMES` to make it API accessible
 1. Add a method called `get_args_and_kwargs_from_job` to the command that takes args self, tc_worker_json, machine_json and returns a tuple of (array of args, dict of kwargs) to call the command with NB: these will be parsed.
-1. If necessary, change the `TaskClusterWorker` or `Machine` models or their serializers and run `./manage.py makemigrations`
-1. If necessary, add secrets like ssh keys to the celery worker config or container (TODO: add example)
+1. Add any required shared secrets like ssh keys to the settings.py or .env-dist container (TODO: add example)
 
 ##### Test it
 
@@ -101,5 +102,3 @@ The task_id is the Celery Task ID.
 1. open the django admin
 1. add a machine (ip, hostname)
 1. add it to appropriate groups (xen, hp) or toggle appropriate properties?
-
-#### TODO: Rotating hardware ssh keys
