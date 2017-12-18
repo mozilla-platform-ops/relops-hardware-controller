@@ -63,4 +63,4 @@ test: .env .docker-build
 	@bin/test.sh
 
 test-ping:
-	curl -v -w '\n' -X POST -H 'Accept: application/json' -H 'Content-Type: application/json' http://localhost:8000/api/v1/jobs\?tc_worker_id\=tc-worker-1\&task_name\=ping
+	curl -v -w '\n' -X POST -H 'Accept: application/json' -H 'Content-Type: application/json' http://localhost:8000/api/v1/workers/tc-worker-1/group/ndc2/jobs\?task_name\=ping
