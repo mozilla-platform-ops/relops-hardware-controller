@@ -439,29 +439,3 @@ def test_job_list_returns_403_for_different_task_name_scope(client):
             'authorization': auth_header,
         })
         assert tc_auth_ctor.called
-
-
-@pytest.mark.django_db
-def test_job_detail_returns_404_for_nonexistent_job(client):
-    url = reverse('api:JobDetail', kwargs=dict(pk='e62c4d06-8101-4074-b3c2-c639005a4430'))
-    response = client.get(url)
-    assert response.status_code == 404
-
-
-@pytest.mark.django_db
-def test_job_detail_returns_job_status(client):
-    worker = TaskClusterWorker.objects.create(tc_worker_id='tc-worker-1')
-    worker.save()
-    machine = Machine.objects.create(host='localhost', ip='127.0.0.1')
-    machine.workers.add(worker)
-    machine.save()
-    job = Job.objects.create(worker_id='tc-worker-1',
-                             task_name='ping',
-                             task_id='e62c4d06-8101-4074-b3c2-c639005a4430',
-                             tc_worker=worker,
-                             machine=machine)
-    job.save()
-
-    url = reverse('api:JobDetail', kwargs=dict(pk=job.task_id))
-    response = client.get(url)
-    assert response.status_code == 200

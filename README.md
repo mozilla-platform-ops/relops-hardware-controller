@@ -48,21 +48,13 @@ Param `tc_worker_id` must be in the data and have an associated machine.
 
 Note: these are params and not in the body to support TC actions
 
-Example response: (TODO: add task status to job serializer)
+Example response:
 
 ```json
 {"task_name":"ping","tc_worker_id":"tc-worker-1","task_id":"e62c4d06-8101-4074-b3c2-c639005a4430"}
 ```
 
 The task_id is the Celery Task ID.
-
-#### GET /api/v1/jobs/:task_id
-
-Examples response:
-
-```json
-{"task_name":"ping","tc_worker_id":"tc-worker-1","task_id":"e62c4d06-8101-4074-b3c2-c639005a4430"}
-```
 
 
 ### Development
