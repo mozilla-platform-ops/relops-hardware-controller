@@ -155,8 +155,8 @@ class Base(Configuration):
         ),
         'DEFAULT_RENDERER_CLASSES': (
             'rest_framework.renderers.JSONRenderer',
-            'rest_framework.renderers.BrowsableAPIRenderer',
-        )
+        ),
+        'UNAUTHENTICATED_USER': 'relops_hardware_controller.api.models.TaskclusterUser',
     }
 
     TASK_NAMES = [
