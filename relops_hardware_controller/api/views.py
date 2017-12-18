@@ -4,9 +4,6 @@
 
 import logging
 
-from uuid import UUID
-
-import django.http
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
@@ -17,7 +14,6 @@ from rest_framework.decorators import (
     renderer_classes,
 )
 from rest_framework.renderers import JSONRenderer
-from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -28,7 +24,7 @@ from .decorators import (
     require_taskcluster_scope_sets,
 )
 from .permissions import HasTaskclusterScopes
-from .models import Job, TaskClusterWorker
+from .models import TaskClusterWorker
 from .serializers import (
     JobSerializer,
     MachineSerializer,
@@ -100,19 +96,3 @@ def queue_job_create(request, worker_id, worker_group, format=None):
     serializer.save()
 
     return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-class JobDetail(APIView):
-    """
-    Returns a job's status.
-    """
-
-    def get_object(self, pk):
-        try:
-            return Job.objects.get(pk=UUID(pk))
-        except Job.DoesNotExist:
-            raise django.http.Http404
-
-    def get(self, request, pk, format=None):
-        serializer = JobSerializer(self.get_object(pk))
-        return Response(serializer.data, status=status.HTTP_200_OK)
