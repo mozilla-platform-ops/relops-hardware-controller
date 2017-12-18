@@ -24,12 +24,10 @@ from .decorators import (
     require_taskcluster_scope_sets,
 )
 from .permissions import HasTaskclusterScopes
-from .models import TaskClusterWorker
 from .serializers import (
     JobSerializer,
-    MachineSerializer,
-    TaskClusterWorkerSerializer,
 )
+
 
 logger = logging.getLogger(__name__)
 
