@@ -28,23 +28,15 @@ app = Celery('relops_hardware_controller')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
 
-MISSING_METHOD_ERROR = '''Django management command {} is missing a
-get_args_and_kwargs_from_job method to convert TaskClusterWorker and Machine
-json to a list of python args and a dict of python kwargs.'''
-
-
 @app.task
-def celery_call_command(name, tc_worker, machine):
+def celery_call_command(job_data):
     """
     Loads a Django management command with param name.
     The command then converts the TaskClusterWorker and Machine JSON to
     python args and kwargs and calls the command with them.
     """
-    cmd_class = load_command_class('relops_hardware_controller.api', name)
+    cmd_class = load_command_class('relops_hardware_controller.api', job_data['task_name'])
 
-    if not hasattr(cmd_class, 'get_args_and_kwargs_from_job'):
-        raise NotImplementedError(MISSING_METHOD_ERROR.format(name))
-
-    args, kwargs = cmd_class.get_args_and_kwargs_from_job(tc_worker, machine)
+    args, kwargs = [], {}
 
     return call_command(cmd_class, *args, **kwargs)

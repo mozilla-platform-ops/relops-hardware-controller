@@ -30,15 +30,13 @@ wait_for() {
 # Only wait for backend services in development
 # http://stackoverflow.com/a/13864829
 # For example, bin/test.sh sets 'DEVELOPMENT' to something
-[ ! -z ${DEVELOPMENT+check} ] && wait_for db 5432 && wait_for redis 6379
+[ ! -z ${DEVELOPMENT+check} ] && wait_for redis 6379
 
 case $1 in
   web)
-    ${CMD_PREFIX_PYTHON:-python} manage.py migrate --noinput
     ${CMD_PREFIX} gunicorn relops_hardware_controller.wsgi:application -b 0.0.0.0:${PORT} --workers ${GUNICORN_WORKERS} --worker-class="egg:meinheld#gunicorn_worker" --access-logfile -
     ;;
   web-dev)
-    python manage.py migrate --noinput
     exec python manage.py runserver 0.0.0.0:${PORT}
     ;;
   worker)

@@ -37,8 +37,6 @@ class TaskclusterAuthentication(authentication.BaseAuthentication):
             authorization=request.META.get('HTTP_AUTHORIZATION', ''))
 
         # auth output schema: http://schemas.taskcluster.net/auth/v1/authenticate-hawk-response.json
-        print('tc client: %s %s', tc_client, payload)
-
         auth_response = tc_client.authenticateHawk(payload)
 
         logger.warn('tc auth response: %s' % auth_response)

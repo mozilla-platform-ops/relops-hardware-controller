@@ -2,37 +2,34 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
-from rest_framework import serializers
+from django.conf import settings
 from django_celery_results.models import TaskResult
-
-from .models import Job, Machine, TaskClusterWorker
-
-
-class TaskClusterWorkerSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = TaskClusterWorker
-        fields = '__all__'
-
-
-class MachineSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Machine
-        fields = '__all__'
+from rest_framework import serializers
 
 
 class TaskResultSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = TaskResult
         fields = ('task_id', 'status', 'date_done', 'result')
 
 
-class JobSerializer(serializers.ModelSerializer):
+class JobSerializer(serializers.Serializer):
+    # Celery Task Result ID
+    task_id = serializers.UUIDField(
+        format='hex_verbose',
+        required=False)
 
-    task_id = serializers.CharField(required=False)
+    # what task to run on the machine
+    task_name = serializers.RegexField(
+        r'^({})$'.format('|'.join(settings.TASK_NAMES)),
+        required=True)
 
-    class Meta:
-        model = Job
-        fields = ('task_name', 'worker_id', 'task_id')
+    # which TC worker callback args
+    worker_id = serializers.CharField(
+        max_length=128,
+        min_length=1,
+        required=True)
+    worker_group = serializers.CharField(
+        max_length=128,
+        min_length=1,
+        required=False)
