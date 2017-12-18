@@ -66,7 +66,6 @@ case $1 in
     # generate code coverage to disk
     mkdir -p /app/htmlcov
     coverage html --skip-covered -d /app/htmlcov
-    # submit coverage
     coverage xml
     ;;
   bash)
