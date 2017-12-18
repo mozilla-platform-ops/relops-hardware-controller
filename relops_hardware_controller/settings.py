@@ -16,7 +16,6 @@ from configurations import Configuration, values
 
 
 class Base(Configuration):
-    DATABASES = values.DatabaseURLValue('postgres://postgres@db/postgres')
 
     SECRET_KEY = values.SecretValue()
 
@@ -64,12 +63,6 @@ class Base(Configuration):
 
     # Application definition
     INSTALLED_APPS = [
-        'django.contrib.admin',
-        'django.contrib.sites',
-        'django.contrib.auth',
-        'django.contrib.contenttypes',
-        'django.contrib.sessions',
-        'django.contrib.messages',
         'django.contrib.staticfiles',
 
         'relops_hardware_controller.apps.RelopsHardwareControllerAppConfig',
@@ -81,11 +74,8 @@ class Base(Configuration):
 
     MIDDLEWARE = [
         'django.middleware.security.SecurityMiddleware',
-        'django.contrib.sessions.middleware.SessionMiddleware',
         'django.middleware.common.CommonMiddleware',
         'django.middleware.csrf.CsrfViewMiddleware',
-        'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
     ]
 
@@ -136,7 +126,7 @@ class Base(Configuration):
     SESSION_CACHE_ALIAS = 'default'
 
     # The django_celery_results backend.
-    CELERY_RESULT_BACKEND = 'django-db'
+    CELERY_RESULT_BACKEND = 'django-cache'
 
     # Throw away task results after 1 hour, for debugging purposes.
     # CELERY_RESULT_EXPIRES = datetime.timedelta(minutes=60)
