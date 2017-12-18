@@ -33,11 +33,6 @@ class Command(BaseCommand):
             help='stop after N seconds',
         )
 
-    def get_args_and_kwargs_from_job(self, _, machine):
-        args = [machine.get('host', None) or machine.get('ip', None)]
-        kwargs = {}
-        return args, kwargs
-
     def validate_host(self, host):
         # from the django URLValidator without unicode
         hostname_re = r'^[\.a-z0-9](?:[\.a-z0-9-]{0,61}[\.a-z0-9])?$'
