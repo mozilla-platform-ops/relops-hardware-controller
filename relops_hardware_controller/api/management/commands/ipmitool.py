@@ -1,11 +1,11 @@
 
 import logging
-import re
 import subprocess
 
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand
-from django.core.validators import validate_ipv46_address
+
+from relops_hardware_controller.api.validators import validate_host
 
 
 logger = logging.getLogger(__name__)
@@ -84,12 +84,6 @@ class Command(BaseCommand):
             help='stop after N seconds',
         )
 
-    def validate_host(self, host):
-        # from the django URLValidator without unicode
-        hostname_re = r'^[\.a-z0-9](?:[\.a-z0-9-]{0,61}[\.a-z0-9])?$'
-        if not re.match(hostname_re, host):
-            validate_ipv46_address(host)
-
     def validate_privlvl(self, privlvl):
         if privlvl not in ['CALLBACK', 'USER', 'OPERATOR', 'ADMINISTRATOR']:
             raise ValidationError('Invalid privlvl must be one of CALLBACK, USER, OPERATOR, or ADMINISTRATOR')
@@ -98,7 +92,7 @@ class Command(BaseCommand):
         if not len(command):
             raise ValidationError('ipmitool requires a list of command args.')
 
-        self.validate_host(options['address'])
+        validate_host(options['address'])
         self.validate_privlvl(options['privlvl'])
         # TODO: validate all the other args and command
 

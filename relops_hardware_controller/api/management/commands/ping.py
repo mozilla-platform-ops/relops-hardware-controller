@@ -1,9 +1,9 @@
 
-import re
 import subprocess
 
 from django.core.management.base import BaseCommand
-from django.core.validators import validate_ipv46_address
+
+from relops_hardware_controller.api.validators import validate_host
 
 
 class Command(BaseCommand):
@@ -33,14 +33,8 @@ class Command(BaseCommand):
             help='stop after N seconds',
         )
 
-    def validate_host(self, host):
-        # from the django URLValidator without unicode
-        hostname_re = r'^[\.a-z0-9](?:[\.a-z0-9-]{0,61}[\.a-z0-9])?$'
-        if not re.match(hostname_re, host):
-            validate_ipv46_address(host)
-
     def handle(self, host, *args, **options):
-        self.validate_host(host)
+        validate_host(host)
 
         call_args = [
             'ping',

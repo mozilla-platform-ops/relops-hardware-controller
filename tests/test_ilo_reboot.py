@@ -24,7 +24,7 @@ def test_ilo_reboot_requires_arg(args):
 @pytest.mark.ilo_reboot
 @pytest.mark.parametrize(
     "args", [
-        ['test_ilo_hostname'],
+        ['test_ilo_hostname!'],
     ], ids=['hostname']
 )
 def test_ilo_reboot_requires_valid_arg(args):
