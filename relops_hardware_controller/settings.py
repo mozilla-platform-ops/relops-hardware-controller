@@ -161,10 +161,9 @@ class Base(Configuration):
 
     TASK_NAMES = [
         # 'loan',
-        # 'reboot',
+        'reboot',
         # 'reimage',
         # 'return_loan',
-        'ping',
     ]
 
     CORS_ORIGIN = values.Value()
@@ -193,6 +192,15 @@ class Dev(Base):
     TASKCLUSTER_CLIENT_ID = 'test-tc-client-id'
     TASKCLUSTER_ACCESS_TOKEN = values.Value('test-tc-access-token')
 
+    TASK_NAMES = [
+        'ping',
+    ]
+
+    REQUIRED_TASKCLUSTER_SCOPE_SETS = [
+        ['project:relops-hardware-controller:{}'.format(task_name)]
+        for task_name in TASK_NAMES
+    ]
+
 
 class Prod(Base):
     ALLOWED_HOSTS = ['tools.taskcluster.net']
@@ -219,3 +227,12 @@ class Test(Base):
 
     TASKCLUSTER_CLIENT_ID = 'test-tc-client-id'
     TASKCLUSTER_ACCESS_TOKEN = values.Value('test-tc-access-token')
+
+    TASK_NAMES = [
+        'ping',
+    ]
+
+    REQUIRED_TASKCLUSTER_SCOPE_SETS = [
+        ['project:relops-hardware-controller:{}'.format(task_name)]
+        for task_name in TASK_NAMES
+    ]
