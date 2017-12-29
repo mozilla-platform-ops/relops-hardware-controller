@@ -1,0 +1,8 @@
+{
+  "test_tc_worker_id.test.releng.dne-dc-1.mozilla.com": {
+    "ssh": {
+      "user": "reboot-forcecommand-user",
+      "key_file": "~/.ssh/test_ipmitool_pass.key"
+    }
+  }
+}

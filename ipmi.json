@@ -1,0 +1,8 @@
+{
+  "test_tc_worker_id.test.releng.dne-dc-1.mozilla.com": {
+    "ipmi": {
+      "user": "test_reboot_user",
+      "password": "test_ipmitool_pass"
+    }
+  }
+}

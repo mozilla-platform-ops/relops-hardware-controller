@@ -30,15 +30,12 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 
 @app.task
 def celery_call_command(job_data):
-    """Loads a Django management command with task_name and passes it
+    """Loads a Django management command with task_name and passes the
+    taskcluster worker id and group:
 
-    the single arg of a serialized job dict e.g.
+    from a serialized job dict e.g.
 
-    {
-        'worker_id': 'tc_worker_id',
-        'worker_group': 'tc_worker_group',
-        'task_name': 'reboot'
-    }
+    cmd('tc_worker_id', 'tc_worker_group')
     """
     cmd_class = load_command_class('relops_hardware_controller.api', job_data['task_name'])
-    return call_command(cmd_class, job_data)
+    return call_command(cmd_class, job_data['worker_id'], job_data['worker_group'])
