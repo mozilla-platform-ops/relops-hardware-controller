@@ -169,8 +169,8 @@ class Base(Configuration):
 
     CORS_ORIGIN = values.Value()
 
-    TASKCLUSTER_CLIENT_ID = values.Value('')
-    TASKCLUSTER_ACCESS_TOKEN = values.SecretValue()
+    TASKCLUSTER_CLIENT_ID = values.Value('', environ_prefix=None)
+    TASKCLUSTER_ACCESS_TOKEN = values.SecretValue(environ_prefix=None)
 
     REQUIRED_TASKCLUSTER_SCOPE_SETS = [
         ['project:relops-hardware-controller:{}'.format(task_name)]
@@ -190,8 +190,8 @@ class Dev(Base):
 
     ILO_USERNAME = 'ilo_dev_username'
 
-    TASKCLUSTER_CLIENT_ID = ''
-    TASKCLUSTER_ACCESS_TOKEN = values.Value('')
+    TASKCLUSTER_CLIENT_ID = 'test-tc-client-id'
+    TASKCLUSTER_ACCESS_TOKEN = values.Value('test-tc-access-token')
 
 
 class Prod(Base):
@@ -217,5 +217,5 @@ class Test(Base):
     ILO_USERNAME = 'ilo_dev_username'
     ILO_PASSWORD = values.Value('not-so-secret-ilo-pass-after-all')
 
-    TASKCLUSTER_CLIENT_ID = ''
-    TASKCLUSTER_ACCESS_TOKEN = values.Value('')
+    TASKCLUSTER_CLIENT_ID = 'test-tc-client-id'
+    TASKCLUSTER_ACCESS_TOKEN = values.Value('test-tc-access-token')
