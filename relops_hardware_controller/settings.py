@@ -161,10 +161,9 @@ class Base(Configuration):
 
     TASK_NAMES = [
         # 'loan',
-        # 'reboot',
+        'reboot',
         # 'reimage',
         # 'return_loan',
-        'ping',
     ]
 
     CORS_ORIGIN = values.Value()
@@ -175,6 +174,58 @@ class Base(Configuration):
     REQUIRED_TASKCLUSTER_SCOPE_SETS = [
         ['project:relops-hardware-controller:{}'.format(task_name)]
         for task_name in TASK_NAMES
+    ]
+
+    # Path to JSON file mapping FDQNs to PDUs with format:
+    # {
+    #   "t-yosemite-r7-0001.test.releng.scl3.mozilla.com": {
+    #     "ssh": {
+    #       "user": "reboot-forcecommand-user",
+    #       "key_file": "~/.ssh/test_ipmitool_pass.key",
+    #      }
+    #    },
+    #   ...
+    # }
+    FQDN_TO_SSH_FILE = values.PathValue('ssh.json')
+
+    # Path to JSON file mapping FDQNs to PDUs with format:
+    # {
+    #   "t-yosemite-r7-0001.test.releng.scl3.mozilla.com": {
+    #     "": "pdu1.r201-6.ops.releng.scl3.mozilla.com:AA1"
+    #    },
+    #   ...
+    # }
+    FQDN_TO_IPMI_FILE = values.PathValue('ipmi.json')
+
+    # Path to JSON file mapping FDQNs to PDUs with format:
+    # {
+    #   "t-yosemite-r7-0001.test.releng.scl3.mozilla.com": {
+    #     "pdu": "pdu1.r201-6.ops.releng.scl3.mozilla.com:AA1"
+    #    },
+    #   ...
+    # }
+    FQDN_TO_PDU_FILE = values.PathValue('pdus.json')
+
+    # Path to JSON file mapping FDQNs to PDUs with format:
+    # {
+    #   "t-yosemite-r7-0001.test.releng.scl3.mozilla.com": {
+    #     "xen_uuid": "pdu1.r201-6.ops.releng.scl3.mozilla.com:AA1"
+    #    },
+    #   ...
+    # }
+    FQDN_TO_XEN_FILE = values.PathValue('xen.json')
+
+    # how many seconds to wait for a machine to go down and come back up
+    DOWN_TIMEOUT = values.IntegerValue(60)
+    UP_TIMEOUT = values.IntegerValue(300)
+
+    REBOOT_METHODS = [
+        'ssh_reboot',
+        'ipmi_reboot',  # ipmi pdu for iX hardware (linux, xp, w8, w10)
+        'snmp_reboot',  # snmp pdu for mac minis
+        'xen_reboot',  # for moonshot HW
+        'ilo_reboot',  # for moonshot HW
+        'file_bugzilla_bug',  # give up and file a bug
     ]
 
 
@@ -192,6 +243,15 @@ class Dev(Base):
 
     TASKCLUSTER_CLIENT_ID = 'test-tc-client-id'
     TASKCLUSTER_ACCESS_TOKEN = values.Value('test-tc-access-token')
+
+    TASK_NAMES = [
+        'ping',
+    ]
+
+    REQUIRED_TASKCLUSTER_SCOPE_SETS = [
+        ['project:relops-hardware-controller:{}'.format(task_name)]
+        for task_name in TASK_NAMES
+    ]
 
 
 class Prod(Base):
@@ -219,3 +279,12 @@ class Test(Base):
 
     TASKCLUSTER_CLIENT_ID = 'test-tc-client-id'
     TASKCLUSTER_ACCESS_TOKEN = values.Value('test-tc-access-token')
+
+    TASK_NAMES = [
+        'ping',
+    ]
+
+    REQUIRED_TASKCLUSTER_SCOPE_SETS = [
+        ['project:relops-hardware-controller:{}'.format(task_name)]
+        for task_name in TASK_NAMES
+    ]

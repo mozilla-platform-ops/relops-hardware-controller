@@ -1,12 +1,11 @@
 
 import logging
-import re
 
-from django.core.management.base import BaseCommand
-from django.core.validators import validate_ipv46_address
 import requests
-
 from django.conf import settings
+from django.core.management.base import BaseCommand
+
+from relops_hardware_controller.api.validators import validate_host
 
 logger = logging.getLogger(__name__)
 
@@ -28,14 +27,8 @@ class Command(BaseCommand):
         kwargs = {}
         return args, kwargs
 
-    def validate_host(self, host):
-        # from the django URLValidator without unicode
-        hostname_re = r'^[\.a-z0-9](?:[\.a-z0-9-]{0,61}[\.a-z0-9])?$'
-        if not re.match(hostname_re, host):
-            validate_ipv46_address(host)
-
     def handle(self, host, *args, **options):
-        self.validate_host(host)
+        validate_host(host)
 
         bgz_url = settings.BUGZILLA_URL
         if bgz_url.endswith('/'):

@@ -75,8 +75,7 @@ The task_id is the Celery Task ID.
 
 ##### Publish it
 
-1. In `relops_hardware_controller/settings.py` add the command name to `TASK_NAMES` to make it API accessible
-1. Add a method called `get_args_and_kwargs_from_job` to the command that takes args self, tc_worker_json, machine_json and returns a tuple of (array of args, dict of kwargs) to call the command with NB: these will be parsed.
+1. In `relops_hardware_controller/settings.py` add the command name to `TASK_NAMES` to make it accessible via API
 1. Add any required shared secrets like ssh keys to the settings.py or .env-dist container (TODO: add example)
 
 ##### Test it

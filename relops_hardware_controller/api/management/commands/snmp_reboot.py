@@ -1,11 +1,11 @@
 
 import logging
-import re
 import subprocess
 import time
 
 from django.core.management.base import BaseCommand
-from django.core.validators import validate_ipv46_address
+
+from relops_hardware_controller.api.validators import validate_host
 
 
 logger = logging.getLogger(__name__)
@@ -64,12 +64,6 @@ class Command(BaseCommand):
             help='Stop each subcommand after N seconds.',
         )
 
-    def validate_host(self, host):
-        # from the django URLValidator without unicode
-        hostname_re = r'^[\.a-z0-9](?:[\.a-z0-9-]{0,61}[\.a-z0-9])?$'
-        if not re.match(hostname_re, host):
-            validate_ipv46_address(host)
-
     def _parse_port(self, port):
         try:
             tower, infeed, outlet = port[0], port[1], port[2:]
@@ -98,7 +92,7 @@ class Command(BaseCommand):
             timeout=options['timeout'])
 
     def handle(self, fqdn, port, *args, **options):
-        self.validate_host(fqdn)
+        validate_host(fqdn)
 
         self.tower, self.infeed, self.outlet = self._parse_port(port)
 

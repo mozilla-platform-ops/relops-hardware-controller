@@ -30,13 +30,12 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 
 @app.task
 def celery_call_command(job_data):
-    """
-    Loads a Django management command with param name.
-    The command then converts the TaskClusterWorker and Machine JSON to
-    python args and kwargs and calls the command with them.
+    """Loads a Django management command with task_name and passes the
+    taskcluster worker id and group:
+
+    from a serialized job dict e.g.
+
+    cmd('tc_worker_id', 'tc_worker_group')
     """
     cmd_class = load_command_class('relops_hardware_controller.api', job_data['task_name'])
-
-    args, kwargs = [], {}
-
-    return call_command(cmd_class, *args, **kwargs)
+    return call_command(cmd_class, job_data['worker_id'], job_data['worker_group'])

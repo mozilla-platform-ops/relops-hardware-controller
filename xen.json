@@ -1,0 +1,5 @@
+{
+  "test_tc_worker_id.test.releng.dne-dc-1.mozilla.com": {
+    "xen_uuid": "test_xen_vm_uuid"
+  }
+}
