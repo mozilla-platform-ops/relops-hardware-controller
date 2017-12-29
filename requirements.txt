@@ -5,7 +5,7 @@ django-configurations
 django-filter
 django-celery-results
 django-redis
-djangorestframework
+djangorestframework==3.7.3
 markdown
 mohawk
 pgpy
