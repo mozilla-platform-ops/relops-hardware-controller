@@ -191,8 +191,11 @@ class Base(Configuration):
     # Path to JSON file mapping FDQNs to PDUs with format:
     # {
     #   "t-yosemite-r7-0001.test.releng.scl3.mozilla.com": {
-    #     "": "pdu1.r201-6.ops.releng.scl3.mozilla.com:AA1"
-    #    },
+    #     "ipmi": {
+    #       "user": "test_reboot_user",
+    #       "password": "test_ipmitool_pass"
+    #     }
+    #   },
     #   ...
     # }
     FQDN_TO_IPMI_FILE = values.PathValue('ipmi.json')
