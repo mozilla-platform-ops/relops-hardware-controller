@@ -36,6 +36,8 @@ services:
       - redis
     links:
       - redis
+    volumes:
+      - $PWD:/app
     command: test
 
   worker:
