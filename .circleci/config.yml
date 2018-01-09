@@ -77,6 +77,16 @@ jobs:
             cp .env-dist .env
             make test
 
+      - run:
+          name: Push container
+          command: |
+             if [ ! -z "${CIRCLE_TAG}" ]; then
+                 docker login -u="$DOCKER_USER" -p="$DOCKER_PASS"
+                 docker tag roller:build "DOCKERHUB_REPO:latest"
+                 docker push "DOCKERHUB_REPO:latest"
+                 docker tag roller:build "DOCKERHUB_REPO:$CIRCLE_TAG"
+                 docker push "DOCKERHUB_REPO:$CIRCLE_TAG"
+             fi
 
 workflows:
   version: 2
