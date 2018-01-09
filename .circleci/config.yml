@@ -75,7 +75,7 @@ jobs:
           working_directory: ~/roller
           command: |
             cp .env-dist .env
-            make test       
+            make test
 
       - run:
           name: Push container
