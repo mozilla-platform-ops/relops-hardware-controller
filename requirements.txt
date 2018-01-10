@@ -8,6 +8,7 @@ django-redis
 djangorestframework==3.7.3
 gunicorn
 markdown
+meinheld
 mohawk
 pgpy
 psycopg2
