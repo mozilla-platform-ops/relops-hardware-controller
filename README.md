@@ -46,7 +46,7 @@ workers. It should be run behind a VPN.
 ### Data Flow
 
 After a Roller admin [registers an action with
-taskcluster](#registering-actions), a sheriff or RelOps operator on [a
+taskcluster](#registering-actions-with-taskcluster), a sheriff or RelOps operator on [a
 worker page of the taskcluster
 dashboard](https://tools.taskcluster.net/provisioners/test-dummy-provisioner/worker-types/dummy-worker-packet)
 can use the actions dropdown to trigger an action (ping, reboot,
@@ -69,7 +69,7 @@ for sending notifications back to the user).
 
 URL for [worker-context Taskcluster
 actions](https://docs.taskcluster.net/reference/platform/taskcluster-queue/docs/actions#defining-actions)
-that needs to be [registered](registering-actions).
+that needs to be [registered](#registering-actions-with-taskcluster).
 
 URL params:
 
@@ -292,5 +292,24 @@ tasks should do the same thing when run as commands as via the API.
 1. Create an ssh key and user limited to `shutdown` or `reboot` with ForceCommand on the target hardware
 1. Add the ssh key and user to the mounted worker ssh keys directory
 1. Add the machine's FQDN to any relevant `FQDN_TO_*` config files
+
+
+#### Registering Actions with Taskcluster
+
+1. Check that the `TASK_NAMES` settings only includes tasks we want to register with Taskcluster
+1. Check `TASKCLUSTER_CLIENT_ID` and `TASKCLUSTER_ACCESS_TOKEN` are present as env vars or in settings (via taskcluster-cli login)
+   The client will need the Taskcluster scope queue:declare-provisioner:$provisioner_id#actions
+1. Run:
+
+```console
+docker run --link roller-redisf:redis --env-file .env mozilla/relops-hardware-controller manage.py register_tc_actions https://roller-dev1.srv.releng.mdc1.mozilla.com my-provisioner-id
+```
+
+Note: An arg like `--settings relops_hardware_controller.settings` or `--configuration Dev` may be necessary to use the right Taskcluster credentials
+
+Note: This does not need to be run from the roller server since the first argument is the URL to Taskcluster to send the action.
+
+1. Check the action shows up in the Taskcluster dashboard for a worker on the provisioner e.g. https://tools.taskcluster.net/provisioners/my-provisioner-id/worker-types/dummy-worker-type/workers/test-dummy-worker-group/dummy-worker-id (this might require creating a worker)
+1. Run the action from the worker's Taskcluster dashboard
 
 
