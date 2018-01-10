@@ -221,6 +221,7 @@ In addition to the usual Django, Django Rest Framework and Celery settings we ha
   Path to the JSON file mapping FQDNs to Xen VM UUIDs example in [settings.py](https://github.com/mozilla-services/relops-hardware-controller/blob/master/relops_hardware_controller/settings.py)
   default `xen.json`
 
+Note: there is [a bug for simplifying the FQDN_TO_* settings](https://github.com/mozilla-services/relops-hardware-controller/issues/57)
 
 #### Testing Actions
 
@@ -286,6 +287,8 @@ rtt min/avg/max/mdev = 0.042/0.069/0.086/0.016 ms
 
 In general, we should be able to run tasks as a manage.py commands and
 tasks should do the same thing when run as commands as via the API.
+
+Note: [bug for not requiring redis to run management commands](https://github.com/mozilla-services/relops-hardware-controller/issues/67)
 
 #### Adding a new machine or VM
 
