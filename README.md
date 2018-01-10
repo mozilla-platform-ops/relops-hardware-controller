@@ -222,3 +222,75 @@ In addition to the usual Django, Django Rest Framework and Celery settings we ha
   default `xen.json`
 
 
+#### Testing Actions
+
+To list available actions/management commands:
+
+```console
+docker run --name roller-runner --link roller-redis:redis --env-file .env roller:build manage.py
+
+Type 'manage.py help <subcommand>' for help on a specific subcommand.
+
+Available subcommands:
+
+[api]
+    file_bugzilla_bug
+    ilo_reboot
+    ipmi_reboot
+    ipmitool
+    ping
+    reboot
+    register_tc_actions
+    snmp_reboot
+    ssh_reboot
+    xenapi_reboot
+```
+
+To show help for one:
+
+```console
+docker run --link roller-redis:redis --env-file .env roller:build manage.py ping --help
+usage: manage.py ping [-h] [--version] [-v {0,1,2,3}] [--settings SETTINGS]
+                      [--pythonpath PYTHONPATH] [--traceback] [--no-color]
+                      [-c COUNT] [-w TIMEOUT] [--configuration CONFIGURATION]
+                      host
+
+Tries to ICMP ping the host. Raises for exceptions for a lost packet or
+timeout.
+
+positional arguments:
+  host                  A host
+
+optional arguments:
+  -h, --help            show this help message and exit
+...
+  -c COUNT              stop after sending NUMBER packets
+  -w TIMEOUT            stop after N seconds
+...
+```
+
+And test it:
+
+```console
+docker run --link roller-redis:redis --env-file .env roller:build manage.py ping -c 4 -w 5 localhost
+PING localhost (127.0.0.1) 56(84) bytes of data.
+64 bytes from localhost (127.0.0.1): icmp_seq=1 ttl=64 time=0.042 ms
+64 bytes from localhost (127.0.0.1): icmp_seq=2 ttl=64 time=0.074 ms
+64 bytes from localhost (127.0.0.1): icmp_seq=3 ttl=64 time=0.086 ms
+64 bytes from localhost (127.0.0.1): icmp_seq=4 ttl=64 time=0.074 ms
+
+--- localhost ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3141ms
+rtt min/avg/max/mdev = 0.042/0.069/0.086/0.016 ms
+```
+
+In general, we should be able to run tasks as a manage.py commands and
+tasks should do the same thing when run as commands as via the API.
+
+#### Adding a new machine or VM
+
+1. Create an ssh key and user limited to `shutdown` or `reboot` with ForceCommand on the target hardware
+1. Add the ssh key and user to the mounted worker ssh keys directory
+1. Add the machine's FQDN to any relevant `FQDN_TO_*` config files
+
+
