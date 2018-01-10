@@ -134,10 +134,10 @@ Check that it's running:
 
 ```console
 docker ps
-CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                    NAMES
-f45d4bcc5c3a        roller:build        "/bin/bash /app/bi..."   3 minutes ago       Up 3 minutes        8000/tcp                 roller-worker
-c48a68ad887c        roller:build        "/bin/bash /app/bi..."   3 minutes ago       Up 3 minutes        0.0.0.0:8000->8000/tcp   roller-web
-d1750321c4df        redis:3.2           "docker-entrypoint..."   9 minutes ago       Up 8 minutes        6379/tcp                 roller-redis
+CONTAINER ID        IMAGE                                     COMMAND                  CREATED             STATUS              PORTS                    NAMES
+f45d4bcc5c3a        mozilla/relops-hardware-controller        "/bin/bash /app/bi..."   3 minutes ago       Up 3 minutes        8000/tcp                 roller-worker
+c48a68ad887c        mozilla/relops-hardware-controller        "/bin/bash /app/bi..."   3 minutes ago       Up 3 minutes        0.0.0.0:8000->8000/tcp   roller-web
+d1750321c4df        redis:3.2                                 "docker-entrypoint..."   9 minutes ago       Up 8 minutes        6379/tcp                 roller-redis
 
 curl -w '\n' -X POST -H 'Accept: application/json' -H 'Content-Type: application/json' http://localhost:8000/api/v1/workers/tc-worker-1/group/ndc2/jobs\?task_name\=ping
 <h1>Bad Request (400)</h1>
@@ -228,7 +228,7 @@ Note: there is [a bug for simplifying the FQDN_TO_* settings](https://github.com
 To list available actions/management commands:
 
 ```console
-docker run --name roller-runner --link roller-redis:redis --env-file .env roller:build manage.py
+docker run --name roller-runner --link roller-redis:redis --env-file .env mozilla/relops-hardware-controller manage.py
 
 Type 'manage.py help <subcommand>' for help on a specific subcommand.
 
@@ -250,7 +250,7 @@ Available subcommands:
 To show help for one:
 
 ```console
-docker run --link roller-redis:redis --env-file .env roller:build manage.py ping --help
+docker run --link roller-redis:redis --env-file .env mozilla/relops-hardware-controller manage.py ping --help
 usage: manage.py ping [-h] [--version] [-v {0,1,2,3}] [--settings SETTINGS]
                       [--pythonpath PYTHONPATH] [--traceback] [--no-color]
                       [-c COUNT] [-w TIMEOUT] [--configuration CONFIGURATION]
@@ -273,7 +273,7 @@ optional arguments:
 And test it:
 
 ```console
-docker run --link roller-redis:redis --env-file .env roller:build manage.py ping -c 4 -w 5 localhost
+docker run --link roller-redis:redis --env-file .env mozilla/relops-hardware-controller manage.py ping -c 4 -w 5 localhost
 PING localhost (127.0.0.1) 56(84) bytes of data.
 64 bytes from localhost (127.0.0.1): icmp_seq=1 ttl=64 time=0.042 ms
 64 bytes from localhost (127.0.0.1): icmp_seq=2 ttl=64 time=0.074 ms
@@ -305,7 +305,7 @@ Note: [bug for not requiring redis to run management commands](https://github.co
 1. Run:
 
 ```console
-docker run --link roller-redisf:redis --env-file .env mozilla/relops-hardware-controller manage.py register_tc_actions https://roller-dev1.srv.releng.mdc1.mozilla.com my-provisioner-id
+docker run --link roller-redis:redis --env-file .env mozilla/relops-hardware-controller manage.py register_tc_actions https://roller-dev1.srv.releng.mdc1.mozilla.com my-provisioner-id
 ```
 
 Note: An arg like `--settings relops_hardware_controller.settings` or `--configuration Dev` may be necessary to use the right Taskcluster credentials
