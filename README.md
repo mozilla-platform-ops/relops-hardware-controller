@@ -120,6 +120,8 @@ Copy the example settings file (if you don't have the repo checked out: `wget ht
 cp .env-dist .env
 ```
 
+**In production, use --env ENV_FOO=bar instead of an env var file.**
+
 Then docker run the containers:
 
 ```console
@@ -151,4 +153,72 @@ docker logs roller-web
 172.17.0.1 - - [10/Jan/2018:08:31:46 +0000] "POST /api/v1/workers/tc-worker-1/group/ndc2/jobs HTTP/1.1" 400 26 "-" "curl/7.43.0"
 172.17.0.1 - - [10/Jan/2018:08:31:46 +0000] "- - HTTP/1.0" 0 0 "-" "-"
 ```
+
+##### Configuration
+
+Roller uses an environment variable called `DJANGO_CONFIGURATION` that
+defaults to `Prod` to pick which [composable
+configuration](https://django-configurations.readthedocs.io/en/stable/)
+to use.
+
+In addition to the usual Django, Django Rest Framework and Celery settings we have:
+
+###### Web Server Environment Variables
+
+* `TASKCLUSTER_CLIENT_ID`
+  The Taskcluster CLIENT_ID to authenticate with
+
+* `TASKCLUSTER_ACCESS_TOKEN`
+  The Taskcluster access token to use
+
+###### Web Server Settings
+
+* `CORS_ORIGIN`
+  Which origin to allow CORS requests from (returning CORS access-control-allow-origin header)
+  Defaults to `localhost` in Dev and `tools.taskcluster.net` in Prod
+
+* `TASK_NAMES`
+  List of management commands can be run from the API. Defaults to `ping` in Dev and `reboot` in prod.
+
+###### Worker Environment Variables
+
+* `BUGZILLA_URL`
+  URL for the Bugzilla REST API e.g. https://landfill.bugzilla.org/bugzilla-5.0-branch/rest/
+
+* `BUGZILLA_API_KEY`
+  API for using the [Bugzilla REST API](https://wiki.mozilla.org/Bugzilla:REST_API)
+
+* `XEN_URL`
+  URL for the Xen RPC API http://xapi-project.github.io/xen-api/usage.html
+
+* `XEN_USERNAME`
+  Username to authenticate with the Xen management server
+
+* `XEN_PASSWORD`
+  Password to authenticate with the Xen management server
+
+* `ILO_USERNAME`
+  Username to authenticate with the HP iLO management interface
+
+* `ILO_PASSWORD`
+  Password to authenticate with the HP iLO management interface
+
+* `FQDN_TO_SSH_FILE`
+  Path to the JSON file mapping FQDNs to SSH username and key file paths example in [settings.py](https://github.com/mozilla-services/relops-hardware-controller/blob/master/relops_hardware_controller/settings.py).
+  The ssh keys need to [be mounted](https://docs.docker.com/engine/reference/commandline/run/#mount-volume--v-read-only) when docker is run. For example with `docker run -v host-ssh-keys:.ssh --name roller-worker`.
+  The ssh user on the target machine should use [ForceCommand](https://www.freebsd.org/cgi/man.cgi?sshd_config(5)) to only allow the command `reboot` or `shutdown`
+  default `ssh.json`
+
+* `FQDN_TO_IPMI_FILE`
+  Path to the JSON file mapping FQDNs to IPMI username and passwords example in [settings.py](https://github.com/mozilla-services/relops-hardware-controller/blob/master/relops_hardware_controller/settings.py)
+  default `ipmi.json`
+
+* `FQDN_TO_PDU_FILE`
+  Path to the JSON file mapping FQDNs to pdu SNMP sockets example in [settings.py](https://github.com/mozilla-services/relops-hardware-controller/blob/master/relops_hardware_controller/settings.py)
+  default `pdus.json`
+
+* `FQDN_TO_XEN_FILE`
+  Path to the JSON file mapping FQDNs to Xen VM UUIDs example in [settings.py](https://github.com/mozilla-services/relops-hardware-controller/blob/master/relops_hardware_controller/settings.py)
+  default `xen.json`
+
 
