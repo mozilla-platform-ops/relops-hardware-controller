@@ -277,14 +277,14 @@ class Test(Base):
     SECRET_KEY = values.Value('not-so-secret-after-all')
 
     BUGZILLA_URL = 'https://landfill.bugzilla.org/bugzilla-5.0-branch/rest/'
-    BUGZILLA_API_KEY = values.Value('not-so-secret-after-all')
+    BUGZILLA_API_KEY = values.Value('anything')
 
     XEN_URL = 'https://xenapiserver/'
     XEN_USERNAME = 'xen_dev_username'
-    XEN_PASSWORD = values.Value('not-so-secret-after-all')
+    XEN_PASSWORD = values.Value('anything_zen_password')
 
     ILO_USERNAME = 'ilo_dev_username'
-    ILO_PASSWORD = values.Value('not-so-secret-ilo-pass-after-all')
+    ILO_PASSWORD = values.Value('anything_ilo_password')
 
     TASKCLUSTER_CLIENT_ID = 'test-tc-client-id'
     TASKCLUSTER_ACCESS_TOKEN = values.Value('test-tc-access-token')
