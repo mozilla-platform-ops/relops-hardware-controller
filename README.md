@@ -99,3 +99,56 @@ Example response:
 ```
 
 Where `task_name`, `worker_id`, and `worker_group` are as defined in the request and `task_id` is the task's [Celery AsyncResult UUID](http://docs.celeryproject.org/en/latest/reference/celery.result.html#celery.result.AsyncResult.id).
+
+
+### Operations
+
+#### Running
+
+To run the service fetch the roller image and redis:
+
+```console
+docker pull mozilla/relops-hardware-controller
+docker pull redis:3.2
+```
+
+The roller web API and worker images run from one docker container.
+
+Copy the example settings file (if you don't have the repo checked out: `wget https://raw.githubusercontent.com/mozilla-services/relops-hardware-controller/master/.env-dist`):
+
+```console
+cp .env-dist .env
+```
+
+Then docker run the containers:
+
+```console
+docker run --name roller-redis --expose 6379 -d redis:3.2
+docker run --name roller-web -p 8000:8000 --link roller-redis:redis --env-file .env mozilla/relops-hardware-controller -d web
+docker run --name roller-worker --link roller-redis:redis --env-file .env mozilla/relops-hardware-controller -d worker
+```
+
+Check that it's running:
+
+```console
+docker ps
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                    NAMES
+f45d4bcc5c3a        roller:build        "/bin/bash /app/bi..."   3 minutes ago       Up 3 minutes        8000/tcp                 roller-worker
+c48a68ad887c        roller:build        "/bin/bash /app/bi..."   3 minutes ago       Up 3 minutes        0.0.0.0:8000->8000/tcp   roller-web
+d1750321c4df        redis:3.2           "docker-entrypoint..."   9 minutes ago       Up 8 minutes        6379/tcp                 roller-redis
+
+curl -w '\n' -X POST -H 'Accept: application/json' -H 'Content-Type: application/json' http://localhost:8000/api/v1/workers/tc-worker-1/group/ndc2/jobs\?task_name\=ping
+<h1>Bad Request (400)</h1>
+
+docker logs roller-web
+[2018-01-10 08:27:23 +0000] [5] [INFO] Starting gunicorn 19.7.1
+[2018-01-10 08:27:23 +0000] [5] [INFO] Listening at: http://0.0.0.0:8000 (5)
+[2018-01-10 08:27:23 +0000] [5] [INFO] Using worker: egg:meinheld#gunicorn_worker
+[2018-01-10 08:27:23 +0000] [8] [INFO] Booting worker with pid: 8
+[2018-01-10 08:27:23 +0000] [10] [INFO] Booting worker with pid: 10
+[2018-01-10 08:27:23 +0000] [12] [INFO] Booting worker with pid: 12
+[2018-01-10 08:27:23 +0000] [13] [INFO] Booting worker with pid: 13
+172.17.0.1 - - [10/Jan/2018:08:31:46 +0000] "POST /api/v1/workers/tc-worker-1/group/ndc2/jobs HTTP/1.1" 400 26 "-" "curl/7.43.0"
+172.17.0.1 - - [10/Jan/2018:08:31:46 +0000] "- - HTTP/1.0" 0 0 "-" "-"
+```
+
