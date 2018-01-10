@@ -301,7 +301,7 @@ Note: [bug for not requiring redis to run management commands](https://github.co
 
 1. Check that the `TASK_NAMES` settings only includes tasks we want to register with Taskcluster
 1. Check `TASKCLUSTER_CLIENT_ID` and `TASKCLUSTER_ACCESS_TOKEN` are present as env vars or in settings (via taskcluster-cli login)
-   The client will need the Taskcluster scope queue:declare-provisioner:$provisioner_id#actions
+   The client will need the Taskcluster scope `queue:declare-provisioner:$provisioner_id#actions`
 1. Run:
 
 ```console
