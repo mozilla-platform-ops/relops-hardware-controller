@@ -316,3 +316,38 @@ Note: This does not need to be run from the roller server since the first argume
 1. Run the action from the worker's Taskcluster dashboard
 
 
+### Development
+
+This is similar to prod deployment, but uses make, docker-compose, and env files to simplify starting and running things.
+
+To build and run the web server development mode and have the worker reload and purge the queue on file changes run:
+
+```console
+make start-web start-worker
+```
+
+To run tests and watch for changes:
+
+```console
+make current-shell  # requires the start-web / the web server to be running
+docker-compose exec web bash
+app@ca6a901df6b4:~$ ptw .
+
+Running: py.test .
+=========================================================== test session starts ============================================================
+platform linux -- Python 3.6.3, pytest-3.3.2, py-1.5.2, pluggy-0.6.0
+Django settings: relops_hardware_controller.settings (from environment variable)
+rootdir: /app, inifile: pytest.ini
+plugins: flake8-0.9.1, django-3.1.2, celery-4.1.0
+collected 74 items
+...
+```
+
+
+#### Adding a HW management task
+
+1. Create `relops_hardware_controller/api/management/commands/<command_name>.py` and `tests/test_<command_name>_command.py` e.g. [ping.py](https://github.com/mozilla-services/relops-hardware-controller/blob/3c1826174fca5face67cebd44e84c40602543a07/relops_hardware_controller/api/management/commands/ping.py) and [test_ping_command.py](https://github.com/mozilla-services/relops-hardware-controller/blob/3c1826174fca5face67cebd44e84c40602543a07/tests/test_ping_command.py)
+1. Run `make shell` then `./manage.py` and check for the command in the api section of the output
+1. Add the command name to `TASK_NAMES` in `relops_hardware_controller/settings.py`  to make it accessible via API
+1. Add any required shared secrets like ssh keys to the settings.py or .env-dist
+1. [register the action with taskcluster](#registering-actions-with-taskcluster)
