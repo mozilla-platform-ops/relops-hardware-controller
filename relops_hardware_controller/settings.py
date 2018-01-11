@@ -15,12 +15,58 @@ import os
 from configurations import Configuration, values
 
 
-class Base(Configuration):
+class Celery:
+    "Celery config settings"
+
+    REDIS_URL = values.Value('redis://redis:6379/0')
+
+    # Use redis as the Celery broker.
+    @property
+    def CELERY_BROKER_URL(self):
+        return self.REDIS_URL
+
+    # The django_celery_results backend.
+    CELERY_RESULT_BACKEND = 'django-cache'
+
+    # Throw away task results after 1 hour, for debugging purposes.
+    # CELERY_RESULT_EXPIRES = datetime.timedelta(minutes=60)
+
+    # Track if a task has been started, not only pending etc.
+    CELERY_TASK_TRACK_STARTED = True
+
+    # Add a 5 minute soft timeout to all Celery tasks.
+    CELERY_TASK_SOFT_TIME_LIMIT = 60 * 5
+
+    # And a 10 minute hard timeout.
+    CELERY_TASK_TIME_LIMIT = CELERY_TASK_SOFT_TIME_LIMIT * 2
+
+
+class Base(Configuration, Celery):
+    TASKCLUSTER_CLIENT_ID = values.Value('', environ_prefix=None)
+    TASKCLUSTER_ACCESS_TOKEN = values.SecretValue(environ_prefix=None)
+
+    # Web Settings
 
     SECRET_KEY = values.SecretValue()
 
+    # SECURITY WARNING: keep the secret key used in production secret!
+    SECRET_KEY = 'ugrryo)w9y0(*i^-zjq+%)=o^g*-0l%l*7!5qzrg3j$y3mtp*$'
+
     # Password validation
     # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators
+
+    @property
+    def CACHES(self):
+        return {
+            'default': {
+                'BACKEND': 'django_redis.cache.RedisCache',
+                'LOCATION': self.REDIS_URL,
+                'OPTIONS': {
+                    'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',  # noqa
+                    'SERIALIZER': 'django_redis.serializers.json.JSONSerializer',  # noqa
+                },
+            },
+        }
 
     AUTH_PASSWORD_VALIDATORS = [
         {
@@ -63,8 +109,6 @@ class Base(Configuration):
 
     # Application definition
     INSTALLED_APPS = [
-        'django.contrib.staticfiles',
-
         'relops_hardware_controller.apps.RelopsHardwareControllerAppConfig',
         'relops_hardware_controller.api',
 
@@ -78,26 +122,6 @@ class Base(Configuration):
         'django.middleware.csrf.CsrfViewMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
     ]
-
-    REDIS_URL = values.Value('redis://redis:6379/0')
-
-    # Use redis as the Celery broker.
-    @property
-    def CELERY_BROKER_URL(self):
-        return self.REDIS_URL
-
-    @property
-    def CACHES(self):
-        return {
-            'default': {
-                'BACKEND': 'django_redis.cache.RedisCache',
-                'LOCATION': self.REDIS_URL,
-                'OPTIONS': {
-                    'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',  # noqa
-                    'SERIALIZER': 'django_redis.serializers.json.JSONSerializer',  # noqa
-                },
-            },
-        }
 
     ROOT_URLCONF = 'relops_hardware_controller.urls'
 
@@ -119,36 +143,8 @@ class Base(Configuration):
 
     WSGI_APPLICATION = 'relops_hardware_controller.wsgi.application'
 
-    # SECURITY WARNING: keep the secret key used in production secret!
-    SECRET_KEY = 'ugrryo)w9y0(*i^-zjq+%)=o^g*-0l%l*7!5qzrg3j$y3mtp*$'
-
     SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
     SESSION_CACHE_ALIAS = 'default'
-
-    # The django_celery_results backend.
-    CELERY_RESULT_BACKEND = 'django-cache'
-
-    # Throw away task results after 1 hour, for debugging purposes.
-    # CELERY_RESULT_EXPIRES = datetime.timedelta(minutes=60)
-
-    # Track if a task has been started, not only pending etc.
-    CELERY_TASK_TRACK_STARTED = True
-
-    # Add a 5 minute soft timeout to all Celery tasks.
-    CELERY_TASK_SOFT_TIME_LIMIT = 60 * 5
-
-    # And a 10 minute hard timeout.
-    CELERY_TASK_TIME_LIMIT = CELERY_TASK_SOFT_TIME_LIMIT * 2
-
-    BUGZILLA_URL = values.URLValue()
-    BUGZILLA_API_KEY = values.SecretValue()
-
-    XEN_URL = values.URLValue()
-    XEN_USERNAME = values.Value()
-    XEN_PASSWORD = values.SecretValue()
-
-    ILO_USERNAME = values.Value()
-    ILO_PASSWORD = values.SecretValue()
 
     REST_FRAMEWORK = {
         'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -166,15 +162,25 @@ class Base(Configuration):
         # 'return_loan',
     ]
 
-    CORS_ORIGIN = values.Value()
-
-    TASKCLUSTER_CLIENT_ID = values.Value('', environ_prefix=None)
-    TASKCLUSTER_ACCESS_TOKEN = values.SecretValue(environ_prefix=None)
-
     REQUIRED_TASKCLUSTER_SCOPE_SETS = [
         ['project:relops-hardware-controller:{}'.format(task_name)]
         for task_name in TASK_NAMES
     ]
+
+    # Which origin to allow CORS requests from
+    CORS_ORIGIN = values.Value()
+
+    # Worker Settings
+
+    BUGZILLA_URL = values.URLValue(environ_prefix=None)
+    BUGZILLA_API_KEY = values.SecretValue(environ_prefix=None)
+
+    XEN_URL = values.URLValue(environ_prefix=None)
+    XEN_USERNAME = values.Value(environ_prefix=None)
+    XEN_PASSWORD = values.SecretValue(environ_prefix=None)
+
+    ILO_USERNAME = values.Value(environ_prefix=None)
+    ILO_PASSWORD = values.SecretValue(environ_prefix=None)
 
     # Path to JSON file mapping FDQNs to PDUs with format:
     # {
@@ -186,7 +192,7 @@ class Base(Configuration):
     #    },
     #   ...
     # }
-    FQDN_TO_SSH_FILE = values.PathValue('ssh.json')
+    FQDN_TO_SSH_FILE = values.PathValue('ssh.json', environ_prefix=None)
 
     # Path to JSON file mapping FDQNs to PDUs with format:
     # {
@@ -198,7 +204,7 @@ class Base(Configuration):
     #   },
     #   ...
     # }
-    FQDN_TO_IPMI_FILE = values.PathValue('ipmi.json')
+    FQDN_TO_IPMI_FILE = values.PathValue('ipmi.json', environ_prefix=None)
 
     # Path to JSON file mapping FDQNs to PDUs with format:
     # {
@@ -207,7 +213,7 @@ class Base(Configuration):
     #    },
     #   ...
     # }
-    FQDN_TO_PDU_FILE = values.PathValue('pdus.json')
+    FQDN_TO_PDU_FILE = values.PathValue('pdus.json', environ_prefix=None)
 
     # Path to JSON file mapping FDQNs to PDUs with format:
     # {
@@ -216,11 +222,11 @@ class Base(Configuration):
     #    },
     #   ...
     # }
-    FQDN_TO_XEN_FILE = values.PathValue('xen.json')
+    FQDN_TO_XEN_FILE = values.PathValue('xen.json', environ_prefix=None)
 
     # how many seconds to wait for a machine to go down and come back up
-    DOWN_TIMEOUT = values.IntegerValue(60)
-    UP_TIMEOUT = values.IntegerValue(300)
+    DOWN_TIMEOUT = values.IntegerValue(60, environ_prefix=None)
+    UP_TIMEOUT = values.IntegerValue(300, environ_prefix=None)
 
     REBOOT_METHODS = [
         'ssh_reboot',
@@ -271,14 +277,14 @@ class Test(Base):
     SECRET_KEY = values.Value('not-so-secret-after-all')
 
     BUGZILLA_URL = 'https://landfill.bugzilla.org/bugzilla-5.0-branch/rest/'
-    BUGZILLA_API_KEY = values.Value('not-so-secret-after-all')
+    BUGZILLA_API_KEY = values.Value('anything')
 
     XEN_URL = 'https://xenapiserver/'
     XEN_USERNAME = 'xen_dev_username'
-    XEN_PASSWORD = values.Value('not-so-secret-after-all')
+    XEN_PASSWORD = values.Value('anything_zen_password')
 
     ILO_USERNAME = 'ilo_dev_username'
-    ILO_PASSWORD = values.Value('not-so-secret-ilo-pass-after-all')
+    ILO_PASSWORD = values.Value('anything_ilo_password')
 
     TASKCLUSTER_CLIENT_ID = 'test-tc-client-id'
     TASKCLUSTER_ACCESS_TOKEN = values.Value('test-tc-access-token')

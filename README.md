@@ -1,21 +1,28 @@
-## relops-hardware-controller aka Release Operations Controller or "roller"
+## Release Operations Controller or "roller"
 
-A service for managing Fx release operations (RelOps) hardware and
-rewrite of [the
-build-slaveapi](https://github.com/mozilla/build-slaveapi) to help
-migrate from [buildbot](http://buildbot.net/) to
-[taskcluster](https://github.com/taskcluster). The code is based on
-[tecken](https://github.com/mozilla-services/tecken).
+This is a service for managing Firefox release operations (RelOps)
+hardware. It is a rewrite of [the
+build-slaveapi](https://github.com/mozilla/build-slaveapi) based on
+[tecken](https://github.com/mozilla-services/tecken) to help migrate
+from [buildbot](http://buildbot.net/) to
+[taskcluster](https://github.com/taskcluster).
+
 
 ### Architecture
+
+The service consists of a [Django Rest
+Framework](http://www.django-rest-framework.org/) web API,
+[Redis](https://redis.io/)-backed
+[Celery](http://www.celeryproject.org/) queue, and one or more Celery
+workers. It should be run behind a VPN.
 
 ```
                  +-----------------------------------------------------------------------------+
                  | VPN                                                                         |
                  |                                                                             |
 +------------+   |   +--------------+     +----------------+     +-----------+     +--------+  |
-|            |   |   |              |     |                |     |           +----->        |  |
-|  TC Dash.  +------->      API     +----->     Queue      +----->  Workers  |     |  HW 1  |  |
+|            |   |   |    Roller    |     |    Roller      |     |  Roller   +----->        |  |
+|  TC Dash.  +------->    API       +----->    Queue       +----->  Workers  |     |  HW 1  |  |
 |            |   |   |              |     |                |     |           <-----+        |  |
 |            <-------+              <-----+                <-----+           |     +--------+  |
 |            |   |   |              |     |                |     |           |                 |
@@ -35,69 +42,312 @@ migrate from [buildbot](http://buildbot.net/) to
                  +-----------------------------------------------------------------------------+
 ```
 
-### Data flow
 
-![sequence diagram from https://mermaidjs.github.io/mermaid-live-editor/#/edit/c2VxdWVuY2VEaWFncmFtCiAgICBwYXJ0aWNpcGFudCB0YyBhcyBVc2VyIGxvZ2dlZCBpbnRvIFRhc2tjbHVzdGVyIERhc2hib2FyZCAKICAgIHBhcnRpY2lwYW50IHJhIGFzIFJvbGxlciBBUEkKICAgIHBhcnRpY2lwYW50IHJkYiBhcyBSb2xsZXIgREIKICAgIHBhcnRpY2lwYW50IHJxIGFzIFJvbGxlciBRdWV1ZQogICAgcGFydGljaXBhbnQgdyBhcyBXb3JrZXIKICAKICAgIE5vdGUgbGVmdCBvZiB0YzogU2hlcmlmZiBvciBSZWxPcHMgT3AgY2xpY2tzIGFuIGFjdGlvbiBidXR0b24gKHJlYm9vdCwgcmVpbWFnZSwgbG9hbiwgZXRjLikKCiAgICAgICAgdGMtPj5yYTogT1BUSU9OUyAvYXBpL3YxL2pvYnM_dGFza19uYW1lPSRhY3Rpb24mdGNfd29ya2VyX2lkPXRjLXdvcmtlci11bm8KICAgICAgICByYS0-PnRjOiAyMDAgT0sKCiAgICAgICAgdGMtPj5yYTogUE9TVCAvYXBpL3YxL2pvYnM_dGFza19uYW1lPSRhY3Rpb24mdGNfd29ya2VyX2lkPXRjLXdvcmtlci11bm8KCiAgICAgICAgcmEtPj5yZGI6IEZpbmQgbWFjaGluZSBmb3IgJ3RjLXdvcmtlci11bm8nCiAgICAgICAgcmRiLT4-cmE6IEZvdW5kIG1hY2hpbmUgbTEgCgogICAgICAgIHJhLT4-cnE6IHF1ZXVlICRhY3Rpb24gb24gbTE_CiAgICAgICAgcnEtPj5yYTogcXVldWVkIHdpdGggdGFza19pZCAyCgogICAgICAgIHJxLT4-dzogcnVuICRhY3Rpb24gb24gbTEKCiAgICAgICAgcmEtPj5yZGI6IHNhdmUgam9iPwogICAgICAgIHJkYi0-PnJhOiBzYXZlZCEKCiAgICAgICAgcmEtPj50YzogMjAxIENyZWF0ZWQgeyJ0YXNrX2lkIjogMi4uLn0gCiAgICAgICAgdGMtPj5yYTogR0VUIC9hcGkvdjEvam9icy8yCiAgICAgICAgcmEtPj50YzogMjAwIE9LIHtzdGF0dXM6ICJSVU5OSU5HIn0KCiAgICAgICAgdy0-PnJxOiBGaW5pc2hlZCAkYWN0aW9uIG9uIG0xCgogICAgICAgIHRjLT4-cmE6IEdFVCAvYXBpL3YxL2pvYnMvMgogICAgICAgIHJhLT4-dGM6IDIwMCBPSyB7c3RhdHVzOiAiQ09NUExFVEUifQo](docs/sequence_diagram.png)
+### Data Flow
 
-### API (TODO: add schemas)
+After a Roller admin [registers an action with
+taskcluster](#registering-actions-with-taskcluster), a sheriff or RelOps operator on [a
+worker page of the taskcluster
+dashboard](https://tools.taskcluster.net/provisioners/test-dummy-provisioner/worker-types/dummy-worker-packet)
+can use the actions dropdown to trigger an action (ping, reboot,
+reimage, etc.) on a RelOps managed machine.
 
-#### POST /api/v1/jobs\?tc_worker_id\=tc-worker-1\&task_name\=ping
+Under the hood, the taskcluster dashboard makes a CORS request to
+[Roller API](#api), which [checks the Taskcluster authorization
+header](https://docs.taskcluster.net/reference/platform/taskcluster-auth/references/api#authenticateHawk)
+and scopes then queues a Celery task for the Roller worker to
+run. (There is [an open
+issue](https://github.com/mozilla-services/relops-hardware-controller/issues/26)
+for sending notifications back to the user).
 
-Requires query params `tc_worker_id` and `task_name`.
+[![data flow sequence diagram](docs/sequence_diagram.png)](https://mermaidjs.github.io/mermaid-live-editor/#/edit/c2VxdWVuY2VEaWFncmFtCiAgICBwYXJ0aWNpcGFudCB0YyBhcyBUYXNrY2x1c3RlciBEYXNoYm9hcmQKICAgIHBhcnRpY2lwYW50IHJhIGFzIFJvbGxlciBBUEkKICAgIHBhcnRpY2lwYW50IHRjYSBhcyBUYXNrY2x1c3RlciBBdXRoIFNlcnZpY2UKICAgIHBhcnRpY2lwYW50IHJxIGFzIFJvbGxlciBRdWV1ZQogICAgcGFydGljaXBhbnQgdyBhcyBSb2xsZXIgV29ya2VyCiAgICBwYXJ0aWNpcGFudCBodyBhcyBSZWxPcHMgTWFjaGluZQogICAgCiAgICBOb3RlIGxlZnQgb2YgdGM6IFNoZXJpZmYgb3IgUmVsT3BzIE9wIGNsaWNrcyBhbiBhY3Rpb24gYnV0dG9uIChyZWJvb3QsIHJlaW1hZ2UsIGxvYW4sIGV0Yy4pCgogICAgICAgIHRjLT4-cmE6IE9QVElPTlMgL2FwaS92MS93b3JrZXJzLyR3b3JrZXJfaWQvZ3JvdXAvJHdvcmtlcl9ncm91cC9qb2JzP3Rhc2tfbmFtZT0kYWN0aW9uCiAgICAgICAgcmEtPj50YzogMjAwIE9LCgogICAgICAgIHRjLT4-cmE6IFBPU1QgL2FwaS92MS93b3JrZXJzLyR3b3JrZXJfaWQvZ3JvdXAvJHdvcmtlcl9ncm91cC9qb2JzP3Rhc2tfbmFtZT0kYWN0aW9uCgogICAgICAgIHJhLT4-dGNhOiBQT1NUIC9hdXRoZW50aWNhdGUtaGF3ayAKICAgICAgICB0Y2EtPj5yYTogMjAwIE9LCgogICAgICAgIHJhLT4-cnE6IHF1ZXVlICRhY3Rpb24gb24gKCR3b3JrZXJfaWQsICR3b3JrZXJfZ3JvdXApCgogICAgICAgIHJhLT4-dGM6IDIwMSBDcmVhdGVkCgogICAgICAgIHJxLT4-dzogcnVuICRhY3Rpb24gb24gb24gKCR3b3JrZXJfaWQsICR3b3JrZXJfZ3JvdXApCgogICAgICAgIHctPj53OiBsb29rIHVwIEZRRE4sIFBEVSwgZXRjLiBmb3IgKCR3b3JrZXJfaWQsICR3b3JrZXJfZ3JvdXApIAoKICAgICAgICB3LT4-aHc6ICRhY3Rpb24KCiAgICAgICAgaHctPj53OiAkYWN0aW9uIGRvbmUKCiAgICAgICAgdy0-PnJxOiAkYWN0aW9uIHRhc2sgZmluaXNoZWQ)
 
-Param `task_name` must be in `settings.py`.
-Param `tc_worker_id` must be in the data and have an associated machine.
 
-Note: these are params and not in the body to support TC actions
+### API
+
+#### POST /api/v1/workers/$worker_id/group/$worker_group/jobs\?task_name\=$task_name
+
+URL for [worker-context Taskcluster
+actions](https://docs.taskcluster.net/reference/platform/taskcluster-queue/docs/actions#defining-actions)
+that needs to be [registered](#registering-actions-with-taskcluster).
+
+URL params:
+
+* `$worker_id` the Taskcluster Worker ID e.g. `ms1-10`. 1 to 128
+  characters in long.
+
+* `$worker_group` the Taskcluster Worker Group e.g. `mdc1` usually a
+  datacenter for RelOps hardware. 1 to 128 characters in long.
+
+Query param:
+
+* `$task_name` the celery task to run. Must be in `TASK_NAMES` in `settings.py`
+
+Taskcluster does not POST data/body params.
+
+Example request from Taskcluster:
+
+```
+POST http://localhost:8000/api/v1/workers/dummy-worker-id/group/dummy-worker-group/jobs?task_name=ping
+Authorization: Hawk ...
+```
 
 Example response:
 
 ```json
-{"task_name":"ping","tc_worker_id":"tc-worker-1","task_id":"e62c4d06-8101-4074-b3c2-c639005a4430"}
+{"task_name":"ping","worker_id":"dummy-worker-id","worker_group":"dummy-worker-group","task_id":"e62c4d06-8101-4074-b3c2-c639005a4430"}
 ```
 
-The task_id is the Celery Task ID.
+Where `task_name`, `worker_id`, and `worker_group` are as defined in the request and `task_id` is the task's [Celery AsyncResult UUID](http://docs.celeryproject.org/en/latest/reference/celery.result.html#celery.result.AsyncResult.id).
+
+
+### Operations
+
+#### Running
+
+To run the service fetch the roller image and redis:
+
+```console
+docker pull mozilla/relops-hardware-controller
+docker pull redis:3.2
+```
+
+The roller web API and worker images run from one docker container.
+
+Copy the example settings file (if you don't have the repo checked out: `wget https://raw.githubusercontent.com/mozilla-services/relops-hardware-controller/master/.env-dist`):
+
+```console
+cp .env-dist .env
+```
+
+**In production, use --env ENV_FOO=bar instead of an env var file.**
+
+Then docker run the containers:
+
+```console
+docker run --name roller-redis --expose 6379 -d redis:3.2
+docker run --name roller-web -p 8000:8000 --link roller-redis:redis --env-file .env mozilla/relops-hardware-controller -d web
+docker run --name roller-worker --link roller-redis:redis --env-file .env mozilla/relops-hardware-controller -d worker
+```
+
+Check that it's running:
+
+```console
+docker ps
+CONTAINER ID        IMAGE                                     COMMAND                  CREATED             STATUS              PORTS                    NAMES
+f45d4bcc5c3a        mozilla/relops-hardware-controller        "/bin/bash /app/bi..."   3 minutes ago       Up 3 minutes        8000/tcp                 roller-worker
+c48a68ad887c        mozilla/relops-hardware-controller        "/bin/bash /app/bi..."   3 minutes ago       Up 3 minutes        0.0.0.0:8000->8000/tcp   roller-web
+d1750321c4df        redis:3.2                                 "docker-entrypoint..."   9 minutes ago       Up 8 minutes        6379/tcp                 roller-redis
+
+curl -w '\n' -X POST -H 'Accept: application/json' -H 'Content-Type: application/json' http://localhost:8000/api/v1/workers/tc-worker-1/group/ndc2/jobs\?task_name\=ping
+<h1>Bad Request (400)</h1>
+
+docker logs roller-web
+[2018-01-10 08:27:23 +0000] [5] [INFO] Starting gunicorn 19.7.1
+[2018-01-10 08:27:23 +0000] [5] [INFO] Listening at: http://0.0.0.0:8000 (5)
+[2018-01-10 08:27:23 +0000] [5] [INFO] Using worker: egg:meinheld#gunicorn_worker
+[2018-01-10 08:27:23 +0000] [8] [INFO] Booting worker with pid: 8
+[2018-01-10 08:27:23 +0000] [10] [INFO] Booting worker with pid: 10
+[2018-01-10 08:27:23 +0000] [12] [INFO] Booting worker with pid: 12
+[2018-01-10 08:27:23 +0000] [13] [INFO] Booting worker with pid: 13
+172.17.0.1 - - [10/Jan/2018:08:31:46 +0000] "POST /api/v1/workers/tc-worker-1/group/ndc2/jobs HTTP/1.1" 400 26 "-" "curl/7.43.0"
+172.17.0.1 - - [10/Jan/2018:08:31:46 +0000] "- - HTTP/1.0" 0 0 "-" "-"
+```
+
+##### Configuration
+
+Roller uses an environment variable called `DJANGO_CONFIGURATION` that
+defaults to `Prod` to pick which [composable
+configuration](https://django-configurations.readthedocs.io/en/stable/)
+to use.
+
+In addition to the usual Django, Django Rest Framework and Celery settings we have:
+
+###### Web Server Environment Variables
+
+* `TASKCLUSTER_CLIENT_ID`
+  The Taskcluster CLIENT_ID to authenticate with
+
+* `TASKCLUSTER_ACCESS_TOKEN`
+  The Taskcluster access token to use
+
+###### Web Server Settings
+
+* `CORS_ORIGIN`
+  Which origin to allow CORS requests from (returning CORS access-control-allow-origin header)
+  Defaults to `localhost` in Dev and `tools.taskcluster.net` in Prod
+
+* `TASK_NAMES`
+  List of management commands can be run from the API. Defaults to `ping` in Dev and `reboot` in prod.
+
+###### Worker Environment Variables
+
+* `BUGZILLA_URL`
+  URL for the Bugzilla REST API e.g. https://landfill.bugzilla.org/bugzilla-5.0-branch/rest/
+
+* `BUGZILLA_API_KEY`
+  API for using the [Bugzilla REST API](https://wiki.mozilla.org/Bugzilla:REST_API)
+
+* `XEN_URL`
+  URL for the Xen RPC API http://xapi-project.github.io/xen-api/usage.html
+
+* `XEN_USERNAME`
+  Username to authenticate with the Xen management server
+
+* `XEN_PASSWORD`
+  Password to authenticate with the Xen management server
+
+* `ILO_USERNAME`
+  Username to authenticate with the HP iLO management interface
+
+* `ILO_PASSWORD`
+  Password to authenticate with the HP iLO management interface
+
+* `FQDN_TO_SSH_FILE`
+  Path to the JSON file mapping FQDNs to SSH username and key file paths example in [settings.py](https://github.com/mozilla-services/relops-hardware-controller/blob/master/relops_hardware_controller/settings.py).
+  The ssh keys need to [be mounted](https://docs.docker.com/engine/reference/commandline/run/#mount-volume--v-read-only) when docker is run. For example with `docker run -v host-ssh-keys:.ssh --name roller-worker`.
+  The ssh user on the target machine should use [ForceCommand](https://www.freebsd.org/cgi/man.cgi?sshd_config(5)) to only allow the command `reboot` or `shutdown`
+  default `ssh.json`
+
+* `FQDN_TO_IPMI_FILE`
+  Path to the JSON file mapping FQDNs to IPMI username and passwords example in [settings.py](https://github.com/mozilla-services/relops-hardware-controller/blob/master/relops_hardware_controller/settings.py)
+  default `ipmi.json`
+
+* `FQDN_TO_PDU_FILE`
+  Path to the JSON file mapping FQDNs to pdu SNMP sockets example in [settings.py](https://github.com/mozilla-services/relops-hardware-controller/blob/master/relops_hardware_controller/settings.py)
+  default `pdus.json`
+
+* `FQDN_TO_XEN_FILE`
+  Path to the JSON file mapping FQDNs to Xen VM UUIDs example in [settings.py](https://github.com/mozilla-services/relops-hardware-controller/blob/master/relops_hardware_controller/settings.py)
+  default `xen.json`
+
+Note: there is [a bug for simplifying the FQDN_TO_* settings](https://github.com/mozilla-services/relops-hardware-controller/issues/57)
+
+#### Testing Actions
+
+To list available actions/management commands:
+
+```console
+docker run --name roller-runner --link roller-redis:redis --env-file .env mozilla/relops-hardware-controller manage.py
+
+Type 'manage.py help <subcommand>' for help on a specific subcommand.
+
+Available subcommands:
+
+[api]
+    file_bugzilla_bug
+    ilo_reboot
+    ipmi_reboot
+    ipmitool
+    ping
+    reboot
+    register_tc_actions
+    snmp_reboot
+    ssh_reboot
+    xenapi_reboot
+```
+
+To show help for one:
+
+```console
+docker run --link roller-redis:redis --env-file .env mozilla/relops-hardware-controller manage.py ping --help
+usage: manage.py ping [-h] [--version] [-v {0,1,2,3}] [--settings SETTINGS]
+                      [--pythonpath PYTHONPATH] [--traceback] [--no-color]
+                      [-c COUNT] [-w TIMEOUT] [--configuration CONFIGURATION]
+                      host
+
+Tries to ICMP ping the host. Raises for exceptions for a lost packet or
+timeout.
+
+positional arguments:
+  host                  A host
+
+optional arguments:
+  -h, --help            show this help message and exit
+...
+  -c COUNT              stop after sending NUMBER packets
+  -w TIMEOUT            stop after N seconds
+...
+```
+
+And test it:
+
+```console
+docker run --link roller-redis:redis --env-file .env mozilla/relops-hardware-controller manage.py ping -c 4 -w 5 localhost
+PING localhost (127.0.0.1) 56(84) bytes of data.
+64 bytes from localhost (127.0.0.1): icmp_seq=1 ttl=64 time=0.042 ms
+64 bytes from localhost (127.0.0.1): icmp_seq=2 ttl=64 time=0.074 ms
+64 bytes from localhost (127.0.0.1): icmp_seq=3 ttl=64 time=0.086 ms
+64 bytes from localhost (127.0.0.1): icmp_seq=4 ttl=64 time=0.074 ms
+
+--- localhost ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3141ms
+rtt min/avg/max/mdev = 0.042/0.069/0.086/0.016 ms
+```
+
+In general, we should be able to run tasks as a manage.py commands and
+tasks should do the same thing when run as commands as via the API.
+
+Note: [bug for not requiring redis to run management commands](https://github.com/mozilla-services/relops-hardware-controller/issues/67)
+
+#### Adding a new machine or VM
+
+1. Create an ssh key and user limited to `shutdown` or `reboot` with ForceCommand on the target hardware
+1. Add the ssh key and user to the mounted worker ssh keys directory
+1. Add the machine's FQDN to any relevant `FQDN_TO_*` config files
+
+
+#### Registering Actions with Taskcluster
+
+1. Check that the `TASK_NAMES` settings only includes tasks we want to register with Taskcluster
+1. Check `TASKCLUSTER_CLIENT_ID` and `TASKCLUSTER_ACCESS_TOKEN` are present as env vars or in settings (via taskcluster-cli login)
+   The client will need the Taskcluster scope `queue:declare-provisioner:$provisioner_id#actions`
+1. Run:
+
+```console
+docker run --link roller-redis:redis --env-file .env mozilla/relops-hardware-controller manage.py register_tc_actions https://roller-dev1.srv.releng.mdc1.mozilla.com my-provisioner-id
+```
+
+Note: An arg like `--settings relops_hardware_controller.settings` or `--configuration Dev` may be necessary to use the right Taskcluster credentials
+
+Note: This does not need to be run from the roller server since the first argument is the URL to Taskcluster to send the action.
+
+1. Check the action shows up in the Taskcluster dashboard for a worker on the provisioner e.g. https://tools.taskcluster.net/provisioners/my-provisioner-id/worker-types/dummy-worker-type/workers/test-dummy-worker-group/dummy-worker-id (this might require creating a worker)
+1. Run the action from the worker's Taskcluster dashboard
 
 
 ### Development
 
-#### Build and run the web and worker containers
+This is similar to prod deployment, but uses make, docker-compose, and env files to simplify starting and running things.
 
-1. `make start-web start-worker`
+To build and run the web server development mode and have the worker reload and purge the queue on file changes run:
 
-#### Adding a public HW management task
+```console
+make start-web start-worker
+```
 
-##### Add it
+To run tests and watch for changes:
+
+```console
+make current-shell  # requires the start-web / the web server to be running
+docker-compose exec web bash
+app@ca6a901df6b4:~$ ptw .
+
+Running: py.test .
+=========================================================== test session starts ============================================================
+platform linux -- Python 3.6.3, pytest-3.3.2, py-1.5.2, pluggy-0.6.0
+Django settings: relops_hardware_controller.settings (from environment variable)
+rootdir: /app, inifile: pytest.ini
+plugins: flake8-0.9.1, django-3.1.2, celery-4.1.0
+collected 74 items
+...
+```
+
+
+#### Adding a HW management task
 
 1. Create `relops_hardware_controller/api/management/commands/<command_name>.py` and `tests/test_<command_name>_command.py` e.g. [ping.py](https://github.com/mozilla-services/relops-hardware-controller/blob/3c1826174fca5face67cebd44e84c40602543a07/relops_hardware_controller/api/management/commands/ping.py) and [test_ping_command.py](https://github.com/mozilla-services/relops-hardware-controller/blob/3c1826174fca5face67cebd44e84c40602543a07/tests/test_ping_command.py)
 1. Run `make shell` then `./manage.py` and check for the command in the api section of the output
-1. Develop the command as a management command and from the test file.
-
-##### Publish it
-
-1. In `relops_hardware_controller/settings.py` add the command name to `TASK_NAMES` to make it accessible via API
-1. Add any required shared secrets like ssh keys to the settings.py or .env-dist container (TODO: add example)
-
-##### Test it
-
-###### from the docker image
-
-1. After running `make clean build`, try running it from docker e.g. with `docker-compose run web python manage.py ping 127.0.0.1`
-
-###### from the API
-
-1. Run a command like `curl -v -w '\n' -X POST -H 'Accept: application/json' -H 'Content-Type: application/json' http://localhost:8000/api/v1/jobs\?tc_worker_id\=tc-worker-1\&task_name\=ping` and check that the worker runs it.
-
-
-##### TODO: permissions, deployment, register with TC
-
-1. define permissions for it
-1. deploy a worker using it and restart the API
-1. register the action with taskcluster
-
-
-#### TODO: Adding a machine or VM
-
-1. open the django admin
-1. add a machine (ip, hostname)
-1. add it to appropriate groups (xen, hp) or toggle appropriate properties?
+1. Add the command name to `TASK_NAMES` in `relops_hardware_controller/settings.py`  to make it accessible via API
+1. Add any required shared secrets like ssh keys to the settings.py or .env-dist
+1. [register the action with taskcluster](#registering-actions-with-taskcluster)
