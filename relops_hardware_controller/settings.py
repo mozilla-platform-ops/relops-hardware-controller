@@ -18,7 +18,7 @@ from configurations import Configuration, values
 class Celery:
     "Celery config settings"
 
-    REDIS_URL = values.Value('redis://redis:6379/0')
+    REDIS_URL = values.Value('redis://redis:6379/0', environ_prefix=None)
 
     # Use redis as the Celery broker.
     @property
@@ -42,9 +42,6 @@ class Celery:
 
 
 class Base(Configuration, Celery):
-    TASKCLUSTER_CLIENT_ID = values.Value('', environ_prefix=None)
-    TASKCLUSTER_ACCESS_TOKEN = values.SecretValue(environ_prefix=None)
-
     # Web Settings
 
     SECRET_KEY = values.SecretValue()
@@ -91,7 +88,7 @@ class Base(Configuration, Celery):
 
     LANGUAGE_CODE = 'en-us'
 
-    TIME_ZONE = 'UTC'
+    TIME_ZONE = values.Value('UTC', environ_prefix=None)
 
     USE_I18N = True
 
@@ -103,9 +100,13 @@ class Base(Configuration, Celery):
     # https://docs.djangoproject.com/en/1.10/howto/static-files/
     STATIC_URL = '/static/'
 
-    CONN_MAX_AGE = values.IntegerValue(60)
+    CONN_MAX_AGE = values.IntegerValue(60, environ_prefix=None)
 
-    ALLOWED_HOSTS = values.ListValue([])
+    ALLOWED_HOSTS = values.ListValue([], environ_prefix=None)
+
+    CORS_ORIGIN = values.Value(environ_prefix=None)
+
+    USE_X_FORWARDED_HOST = values.BooleanValue(False, environ_prefix=None)
 
     # Application definition
     INSTALLED_APPS = [
@@ -155,20 +156,21 @@ class Base(Configuration, Celery):
         'UNAUTHENTICATED_USER': 'relops_hardware_controller.api.models.TaskclusterUser',
     }
 
-    TASK_NAMES = [
-        # 'loan',
+    TASKCLUSTER_CLIENT_ID = values.Value('', environ_prefix=None)
+    TASKCLUSTER_ACCESS_TOKEN = values.SecretValue(environ_prefix=None)
+
+    TASK_NAMES = values.ListValue([
+        'ping',
         'reboot',
-        # 'reimage',
-        # 'return_loan',
-    ]
+        'reimage',
+        'loan',
+        'return_loan',
+    ], environ_prefix=None)
 
-    REQUIRED_TASKCLUSTER_SCOPE_SETS = [
-        ['project:relops-hardware-controller:{}'.format(task_name)]
-        for task_name in TASK_NAMES
-    ]
-
-    # Which origin to allow CORS requests from
-    CORS_ORIGIN = values.Value()
+    REQUIRED_TASKCLUSTER_SCOPE_SETS = values.SingleNestedListValue([
+        ['project:releng:{}'.format(task_name)]
+        for task_name in TASK_NAMES.value
+    ], seq_separator=',', environ_prefix=None)
 
     # Worker Settings
 
@@ -228,44 +230,27 @@ class Base(Configuration, Celery):
     DOWN_TIMEOUT = values.IntegerValue(60, environ_prefix=None)
     UP_TIMEOUT = values.IntegerValue(300, environ_prefix=None)
 
-    REBOOT_METHODS = [
+    REBOOT_METHODS = values.ListValue([
         'ssh_reboot',
         'ipmi_reboot',  # ipmi pdu for iX hardware (linux, xp, w8, w10)
         'snmp_reboot',  # snmp pdu for mac minis
         'xen_reboot',  # for moonshot HW
         'ilo_reboot',  # for moonshot HW
         'file_bugzilla_bug',  # give up and file a bug
-    ]
+    ], environ_prefix=None)
 
 
 class Dev(Base):
-    DEBUG = True
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
-    CORS_ORIGIN = 'localhost'
+    DEBUG = values.BooleanValue(True)
+    ALLOWED_HOSTS = values.ListValue(['localhost', '127.0.0.1'])
+    CORS_ORIGIN = values.Value('localhost')
 
-    BUGZILLA_URL = 'https://landfill.bugzilla.org/bugzilla-5.0-branch/rest/'
-
-    XEN_URL = 'https://xenapiserver/'
-    XEN_USERNAME = 'xen_dev_username'
-
-    ILO_USERNAME = 'ilo_dev_username'
-
-    TASKCLUSTER_CLIENT_ID = 'test-tc-client-id'
-    TASKCLUSTER_ACCESS_TOKEN = values.Value('test-tc-access-token')
-
-    TASK_NAMES = [
-        'ping',
-    ]
-
-    REQUIRED_TASKCLUSTER_SCOPE_SETS = [
-        ['project:relops-hardware-controller:{}'.format(task_name)]
-        for task_name in TASK_NAMES
-    ]
+    BUGZILLA_URL = values.Value('https://landfill.bugzilla.org/bugzilla-5.0-branch/rest/')
 
 
 class Prod(Base):
-    ALLOWED_HOSTS = ['tools.taskcluster.net']
-    CORS_ORIGIN = 'tools.taskcluster.net'
+    ALLOWED_HOSTS = values.ListValue(['tools.taskcluster.net'], environ_prefix=None)
+    CORS_ORIGIN = values.Value('tools.taskcluster.net', environ_prefix=None)
 
 
 class Test(Base):
