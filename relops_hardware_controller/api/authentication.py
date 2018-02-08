@@ -1,4 +1,3 @@
-
 import logging
 
 from rest_framework import authentication
@@ -31,10 +30,13 @@ class TaskclusterAuthentication(authentication.BaseAuthentication):
         # http://schemas.taskcluster.net/auth/v1/authenticate-hawk-request.json
         payload = dict(
             method=request.method.lower(),
-            resource=request.META.get('PATH_INFO'),
-            host=request.META.get('HTTP_HOST', '').split(':')[0],  # server hostname or ipv4 address
+            resource=request.get_full_path(),
+            host=request.get_host(),
             port=int(request.get_port()),
             authorization=request.META.get('HTTP_AUTHORIZATION', ''))
+
+        if request.META.get('HTTP_X_FORWARDED_PROTO') == 'https':
+            payload['port'] = 443
 
         # auth output schema: http://schemas.taskcluster.net/auth/v1/authenticate-hawk-response.json
         auth_response = tc_client.authenticateHawk(payload)

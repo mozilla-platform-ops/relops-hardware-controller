@@ -19,6 +19,7 @@ def set_cors_headers(origin=None, methods='GET'):
         def inner(*args, **kwargs):
             response = func(*args, **kwargs)
             response['Access-Control-Allow-Origin'] = origin
+            response['Access-Control-Allow-Headers'] = 'Authorization,Content-Type'
             response['Access-Control-Allow-Methods'] = ','.join(methods)
             return response
 
