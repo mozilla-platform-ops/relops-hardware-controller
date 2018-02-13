@@ -161,7 +161,13 @@ class Base(Configuration, Celery):
 
     TASK_NAMES = values.ListValue([
         'ping',
+        'status',
         'reboot',
+        'ipmi_off',
+        'ipmi_on',
+        'ipmi_list',
+        'ipmi_cycle',
+        'ipmi_reset',
         'reimage',
         'loan',
         'return_loan',
@@ -232,9 +238,9 @@ class Base(Configuration, Celery):
 
     REBOOT_METHODS = values.ListValue([
         'ssh_reboot',
-        'ipmi_reboot',  # ipmi pdu for iX hardware (linux, xp, w8, w10)
+        'ipmi_reset',
+        'ipmi_cycle',
         'snmp_reboot',  # snmp pdu for mac minis
-        'xen_reboot',  # for moonshot HW
         'ilo_reboot',  # for moonshot HW
         'file_bugzilla_bug',  # give up and file a bug
     ], environ_prefix=None)
@@ -242,8 +248,8 @@ class Base(Configuration, Celery):
 
 class Dev(Base):
     DEBUG = values.BooleanValue(True)
-    ALLOWED_HOSTS = values.ListValue(['localhost', '127.0.0.1'])
-    CORS_ORIGIN = values.Value('localhost')
+    ALLOWED_HOSTS = values.ListValue(['tools.taskcluster.net', 'localhost', '127.0.0.1'])
+    CORS_ORIGIN = values.Value('*')
 
     BUGZILLA_URL = values.Value('https://landfill.bugzilla.org/bugzilla-5.0-branch/rest/')
 
