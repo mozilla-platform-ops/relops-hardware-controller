@@ -21,7 +21,7 @@ def can_ping(fqdn, count=4, timeout=5):
     ping_cls = load_command_class('relops_hardware_controller.api', 'ping')
 
     try:
-        call_command(ping_cls, fqdn, '-c', count, '-w', timeout)
+        call_command(ping_cls, fqdn, 'ping', '-c', count, '-w', timeout)
         logger.debug('pinging %s succeeded', fqdn)
         return True
     except Exception as error:

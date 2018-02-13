@@ -17,6 +17,12 @@ class Command(BaseCommand):
             help='A host',
         )
 
+        parser.add_argument(
+            'command',
+            type=str,
+            help='command to execute',
+        )
+
         # Named (optional) arguments
         parser.add_argument(
             '-c',
