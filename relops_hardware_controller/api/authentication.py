@@ -41,7 +41,8 @@ class TaskclusterAuthentication(authentication.BaseAuthentication):
         # auth output schema: http://schemas.taskcluster.net/auth/v1/authenticate-hawk-response.json
         auth_response = tc_client.authenticateHawk(payload)
 
-        logger.warn('tc auth response: %s' % auth_response)
+        client_id = auth_response.get('clientId', '')
+        logger.warn("client_id:{}".format(client_id))
 
         if 'status' not in auth_response:
             raise exceptions.AuthenticationFailed('\'status\' not found invalid auth response')
@@ -51,5 +52,6 @@ class TaskclusterAuthentication(authentication.BaseAuthentication):
             raise exceptions.AuthenticationFailed('invalid auth response status: %s %s'
                                                   % (auth_response['status'], auth_response.get('message', '')))
 
-        return TaskclusterUser(scopes=auth_response.get('scopes', []),
+        return TaskclusterUser(client_id=client_id,
+                               scopes=auth_response.get('scopes', []),
                                is_authenticated=True), None

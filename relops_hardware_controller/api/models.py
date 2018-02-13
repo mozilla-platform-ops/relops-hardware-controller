@@ -14,7 +14,8 @@ class TaskclusterUser:
     map scopes to permissions.
     """
 
-    def __init__(self, scopes=[], is_authenticated=False):
+    def __init__(self, client_id='', scopes=[], is_authenticated=False):
+        self.client_id = client_id
         self.is_authenticated = is_authenticated
         self.scopes = scopes
 

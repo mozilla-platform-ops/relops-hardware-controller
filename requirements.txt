@@ -6,6 +6,7 @@ django-filter
 django-celery-results
 django-redis
 djangorestframework==3.7.3
+dnspython
 gunicorn
 markdown
 meinheld
