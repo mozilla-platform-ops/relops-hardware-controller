@@ -1,8 +1,33 @@
 {
-  "test_tc_worker_id.test.releng.dne-dc-1.mozilla.com": {
+  "types": {
+    "moonshot": {
+      "args": [ "-B 0", "-b 7" ],
+      "map": {
+        "c1n1": [ "-T 0x82", "-t 0x72" ],
+        "c2n1": [ "-T 0x84", "-t 0x72" ],
+        "c3n1": [ "-T 0x86", "-t 0x72" ]
+      },
+      "commands": {
+        "ipmi_list": [ "sel", "list", "last", "5" ],
+        "ipmi_status": [ "chassis", "power", "status" ],
+        "ipmi_reset": [ "chassis", "power", "reset" ],
+        "ipmi_cycle": [ "chassis", "power", "cycle" ],
+        "ipmi_off": [ "chassis", "power", "off" ],
+        "ipmi_on": [ "chassis", "power", "on" ]
+      }
+    }
+  },
+  "10.49.16.17": {
     "ipmi": {
-      "user": "test_reboot_user",
-      "password": "test_ipmitool_pass"
+      "user": "username",
+      "password": "password",
+      "type": "moonshot"
+    }
+  },
+  "10.49.58.3": {
+    "ipmi": {
+      "ip": "10.49.16.17",
+      "addr": "c3n1"
     }
   }
 }
