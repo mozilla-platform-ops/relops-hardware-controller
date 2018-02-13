@@ -51,15 +51,13 @@ res.search = search
 
 
 def get_hostname(worker_id):
-    logging.warn('worker_id: {}'.format(worker_id))
+    logging.debug('worker_id: {}'.format(worker_id))
     try:
         ip = res.query(worker_id)
-        for a in ip:
-            logging.warn('ans:{}'.format(a))
-        logging.warn('worker_id -> ip: {}'.format(ip[0]))
+        logging.debug('worker_id -> ip: {}'.format(ip[0]))
         return ip[0]
-    except:
-        logging.warn('worker_id -> ip. dns lookup failed')
+    except Exception as e:
+        logging.warn('worker_id -> ip. dns lookup failed: {}'.format(e))
         return worker_id
 
 
@@ -69,14 +67,14 @@ def celery_call_command(job_data):
     """
 
     command = job_data['task_name']
-    logging.warn('task_name:{}'.format(command))
+    logging.debug('command_name:{}'.format(command))
     task = 'ipmi' if command.startswith('ipmi') else command
-    logging.warn('task_name:{}'.format(command))
+    logging.debug('task_name:{}'.format(task))
 
-    logging.warn('job_data:{}'.format(job_data))
+    logging.debug('job_data:{}'.format(job_data))
     hostname=get_hostname(job_data['worker_id'])
     cmd_class = load_command_class('relops_hardware_controller.api', task)
-    logging.warn('cmd_class:{}'.format(cmd_class))
+    logging.debug('cmd_class:{}'.format(cmd_class))
 
     stdout = StringIO()
     call_command(cmd_class, hostname, command, stdout=stdout)

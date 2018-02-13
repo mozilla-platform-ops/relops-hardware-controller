@@ -87,10 +87,10 @@ class Command(BaseCommand):
         pdu_config = json.load(open(settings.FQDN_TO_PDU_FILE, 'r'))
         xen_config = json.load(open(settings.FQDN_TO_XEN_FILE, 'r'))
 
-        logger.warn('reboot_methods:{}'.format(settings.REBOOT_METHODS))
+        logger.debug('reboot_methods:{}'.format(settings.REBOOT_METHODS))
         stdout = StringIO()
         for reboot_method in settings.REBOOT_METHODS:
-            logger.warn('reboot_method:{}'.format(reboot_method))
+            logger.debug('reboot_method:{}'.format(reboot_method))
             if reboot_method == 'ssh_reboot':
                 if hostname not in ssh_config:
                     logger.info('skipping ssh reboot of %s since we can\'t'

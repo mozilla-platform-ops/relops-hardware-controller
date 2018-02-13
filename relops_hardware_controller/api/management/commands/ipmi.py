@@ -1,6 +1,4 @@
 import functools
-import logging
-from time import sleep
 import json
 
 from django.conf import settings
@@ -8,10 +6,7 @@ from django.core.management import (
     call_command,
     load_command_class,
 )
-from django.core.management.base import BaseCommand, CommandError
-
-
-logger = logging.getLogger(__name__)
+from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
@@ -30,7 +25,6 @@ class Command(BaseCommand):
 
     def handle(self, ip, command, *args, **options):
         ipmi_config = json.load(open(settings.FQDN_TO_IPMI_FILE, 'r'))
-        logger.warn('ipmi_config:{}'.format(ipmi_config))
 
         args = []
 

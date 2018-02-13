@@ -42,7 +42,7 @@ class TaskclusterAuthentication(authentication.BaseAuthentication):
         auth_response = tc_client.authenticateHawk(payload)
 
         client_id = auth_response.get('clientId', '')
-        logger.warn("client_id:{}".format(client_id))
+        logger.debug("client_id:{}".format(client_id))
 
         if 'status' not in auth_response:
             raise exceptions.AuthenticationFailed('\'status\' not found invalid auth response')
