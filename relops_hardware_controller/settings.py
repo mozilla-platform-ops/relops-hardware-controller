@@ -247,11 +247,11 @@ class Base(Configuration, Celery):
 
 
 class Dev(Base):
-    DEBUG = values.BooleanValue(True)
-    ALLOWED_HOSTS = values.ListValue(['tools.taskcluster.net', 'localhost', '127.0.0.1'])
-    CORS_ORIGIN = values.Value('*')
+    DEBUG = values.BooleanValue(True, environ_prefix=None)
+    ALLOWED_HOSTS = values.ListValue(['tools.taskcluster.net', 'localhost', '127.0.0.1'], environ_prefix=None)
+    CORS_ORIGIN = values.Value('*', environ_prefix=None)
 
-    BUGZILLA_URL = values.Value('https://landfill.bugzilla.org/bugzilla-5.0-branch/rest/')
+    BUGZILLA_URL = values.Value('https://landfill.bugzilla.org/bugzilla-5.0-branch/rest/', environ_prefix=None)
 
 
 class Prod(Base):
