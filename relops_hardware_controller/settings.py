@@ -185,10 +185,10 @@ class Base(Configuration, Celery):
 
     XEN_URL = values.URLValue('', environ_prefix=None)
     XEN_USERNAME = values.Value('', environ_prefix=None)
-    XEN_PASSWORD = values.SecretValue('', environ_prefix=None)
+    XEN_PASSWORD = values.Value('', environ_prefix=None)
 
     ILO_USERNAME = values.Value('', environ_prefix=None)
-    ILO_PASSWORD = values.SecretValue('', environ_prefix=None)
+    ILO_PASSWORD = values.Value('', environ_prefix=None)
 
     # Path to JSON file mapping FDQNs to PDUs with format:
     # {
