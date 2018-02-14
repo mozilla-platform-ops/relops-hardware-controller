@@ -9,6 +9,6 @@ from . import views
 app_name = 'api'
 urlpatterns = [
     url(r'^workers/(?P<worker_id>[-_0-9a-zA-Z]{1,128})/'
-        'group/(?P<worker_group>[-_0-9a-zA-Z]{1,128})/jobs$',
+        'jobs$',
         views.queue_job, name='JobList'),
 ]

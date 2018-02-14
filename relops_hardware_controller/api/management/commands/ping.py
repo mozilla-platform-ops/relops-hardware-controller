@@ -17,6 +17,12 @@ class Command(BaseCommand):
             help='A host',
         )
 
+        parser.add_argument(
+            'command',
+            type=str,
+            help='command to execute',
+        )
+
         # Named (optional) arguments
         parser.add_argument(
             '-c',
@@ -43,8 +49,7 @@ class Command(BaseCommand):
             host,
         ]
 
-        # Raises exceptions for failure, non-zero returncode, and timeouts
-        subprocess.run(
-            call_args,
-            timeout=options['timeout'],
-            check=True)
+        return subprocess.check_output(call_args,
+                                       stderr=subprocess.STDOUT,
+                                       encoding='utf-8',
+                                       timeout=options['timeout'])

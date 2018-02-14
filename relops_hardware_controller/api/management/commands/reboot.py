@@ -1,9 +1,8 @@
-
-
 import functools
 import json
 import logging
 import time
+from io import StringIO
 
 from django.conf import settings
 from django.core.management import (
@@ -15,24 +14,11 @@ from django.core.management.base import BaseCommand
 logger = logging.getLogger(__name__)
 
 
-def get_fqdn(worker_id, worker_group):
-    '''
-    Builds a fqdn from serialized job TC worker id and worker group with format:
-
-    <shortname>.(win)?test.releng.<datacenter>.mozilla.com
-    '''
-    # TODO: handle {worker_id}.wintest... too
-    return '{worker_id}.test.releng.{worker_group}.mozilla.com'\
-        .format(worker_id=worker_id, worker_group=worker_group)
-
-
 def can_ping(fqdn, count=4, timeout=5):
     ping_cls = load_command_class('relops_hardware_controller.api', 'ping')
-    ping = functools.partial(call_command, ping_cls, fqdn, '-c', count, '-w', timeout)
 
-    # try to ping the machine
     try:
-        ping()
+        call_command(ping_cls, fqdn, 'ping', '-c', count, '-w', timeout)
         logger.debug('pinging %s succeeded', fqdn)
         return True
     except Exception as error:
@@ -82,83 +68,101 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         # Positional arguments
         parser.add_argument(
-            'worker_id',
+            'hostname',
             type=str,
             help='A TC worker ID')
 
         parser.add_argument(
-            'worker_group',
+            'command',
             type=str,
             help='A TC worker group')
 
-    def handle(self, worker_id, worker_group, *args, **options):
-        fqdn = get_fqdn(worker_id, worker_group)
+    def handle(self, hostname, command, *args, **options):
+        start = time.time()
         ssh_config = json.load(open(settings.FQDN_TO_SSH_FILE, 'r'))
         ipmi_config = json.load(open(settings.FQDN_TO_IPMI_FILE, 'r'))
         pdu_config = json.load(open(settings.FQDN_TO_PDU_FILE, 'r'))
         xen_config = json.load(open(settings.FQDN_TO_XEN_FILE, 'r'))
 
+        logger.debug('reboot_methods:{}'.format(settings.REBOOT_METHODS))
+        stdout = StringIO()
         for reboot_method in settings.REBOOT_METHODS:
+            logger.debug('reboot_method:{}'.format(reboot_method))
             if reboot_method == 'ssh_reboot':
-                if not can_ping(fqdn):
-                    logger.info('skipping ssh reboot of %s since we can\'t ping the machine.', fqdn)
-                    continue
-
-                if fqdn not in ssh_config:
+                if hostname not in ssh_config:
                     logger.info('skipping ssh reboot of %s since we can\'t'
-                                ' find ssh creds in settings.FQDN_TO_SSH_FILE.', fqdn)
+                                ' find ssh creds in settings.FQDN_TO_SSH_FILE.', hostname)
+                    continue
+
+                if not can_ping(hostname):
+                    logger.info('skipping ssh reboot of %s since we can\'t ping the machine.', hostname)
                     continue
 
                 reboot_args = [
-                    '-l', ssh_config[fqdn]['ssh']['user'],
-                    '-i', ssh_config[fqdn]['ssh']['key_file'],
-                    fqdn,
+                    '-l', ssh_config[hostname]['ssh']['user'],
+                    '-i', ssh_config[hostname]['ssh']['key_file'],
+                    hostname,
                 ]
-            elif reboot_method == 'ipmi_reboot':
-                if fqdn not in ipmi_config:
-                    logger.info('skipping ipmi reboot of %s since we can\'t'
-                                ' find creds in settings.FQDN_TO_IPMI_FILE.', fqdn)
+            elif reboot_method == 'ipmi_reset':
+                reboot_method = 'ipmi'
+                if hostname not in ipmi_config:
+                    logger.info('skipping ipmi reset of %s since we can\'t'
+                                ' find creds in settings.FQDN_TO_IPMI_FILE.', hostname)
                     continue
 
                 reboot_args = [
-                    '-H', fqdn,
-                    '-U', ipmi_config[fqdn]['ipmi']['user'],
-                    '-P', ipmi_config[fqdn]['ipmi']['password'],
+                    hostname,
+                    'ipmi_reset'
+                ]
+            elif reboot_method == 'ipmi_cycle':
+                reboot_method = 'ipmi'
+                if hostname not in ipmi_config:
+                    logger.info('skipping ipmi cycle of %s since we can\'t'
+                                ' find creds in settings.FQDN_TO_IPMI_FILE.', hostname)
+                    continue
+
+                reboot_args = [
+                    hostname,
+                    'ipmi_cycle'
                 ]
             elif reboot_method == 'snmp_reboot':
-                if fqdn not in pdu_config:
+                if hostname not in pdu_config:
                     logger.info('skipping snmp reboot of %s since we can\'t'
-                                ' find creds in settings.FQDN_TO_PDU_FILE.', fqdn)
+                                ' find creds in settings.FQDN_TO_PDU_FILE.', hostname)
                     continue
 
-                pdu_host, port_args = pdu_config[fqdn]['pdu'].rsplit(':', 1)
+                pdu_host, port_args = pdu_config[hostname]['pdu'].rsplit(':', 1)
 
                 reboot_args = [pdu_host] + list(port_args)
             elif reboot_method == 'xenapi_reboot':
-                if fqdn not in xen_config:
+                if hostname not in xen_config:
                     logger.info('skipping xenapi reboot of %s since we can\'t'
-                                ' find a host uuid in settings.FQDN_TO_XEN_FILE.', fqdn)
+                                ' find a host uuid in settings.FQDN_TO_XEN_FILE.', hostname)
                     continue
 
-                reboot_args = [xen_config[fqdn]['xen_uuid']]
+                reboot_args = [xen_config[hostname]['xen_uuid']]
             elif reboot_method == 'ilo_reboot':
-                reboot_args = [fqdn]
+                reboot_args = [hostname]
             elif reboot_method == 'file_bugzilla_bug':
-                reboot_args = [fqdn]
+                reboot_args = [hostname]
             else:
                 raise NotImplementedError()
 
             # try the reboot method
             try:
                 call_command(load_command_class('relops_hardware_controller.api', reboot_method),
+                             stdout=stdout,
                              *reboot_args)
 
                 # reboot method succeeded wait for machine to go down then come back up
-                if reboot_succeeded(fqdn):
+                if reboot_succeeded(hostname):
                     break
             except Exception as error:
                 # try the next reboot method without waiting for the machine to come up
-                logger.info('reboot: %s of %s failed with error: %s', reboot_method, fqdn, error)
+                logger.info('reboot: %s of %s failed with error: %s', reboot_method, hostname, error)
                 continue
 
             # reboot method failed or didn't come up so try the next method
+
+        elapsed = time.time() - start
+        return '{}: {}. Completed in {:.3g} seconds'.format(reboot_method, stdout.getvalue().rstrip('\n'), elapsed)

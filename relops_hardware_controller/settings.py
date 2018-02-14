@@ -156,19 +156,25 @@ class Base(Configuration, Celery):
         'UNAUTHENTICATED_USER': 'relops_hardware_controller.api.models.TaskclusterUser',
     }
 
-    TASKCLUSTER_CLIENT_ID = values.Value('', environ_prefix=None)
+    TASKCLUSTER_CLIENT_ID = values.Value(environ_prefix=None)
     TASKCLUSTER_ACCESS_TOKEN = values.SecretValue(environ_prefix=None)
 
     TASK_NAMES = values.ListValue([
         'ping',
+        'status',
         'reboot',
+        'ipmi_off',
+        'ipmi_on',
+        'ipmi_list',
+        'ipmi_cycle',
+        'ipmi_reset',
         'reimage',
         'loan',
         'return_loan',
     ], environ_prefix=None)
 
     REQUIRED_TASKCLUSTER_SCOPE_SETS = values.SingleNestedListValue([
-        ['project:releng:{}'.format(task_name)]
+        ['project:releng:roller:{}'.format(task_name)]
         for task_name in TASK_NAMES.value
     ], seq_separator=',', environ_prefix=None)
 
@@ -177,12 +183,12 @@ class Base(Configuration, Celery):
     BUGZILLA_URL = values.URLValue(environ_prefix=None)
     BUGZILLA_API_KEY = values.SecretValue(environ_prefix=None)
 
-    XEN_URL = values.URLValue(environ_prefix=None)
-    XEN_USERNAME = values.Value(environ_prefix=None)
-    XEN_PASSWORD = values.SecretValue(environ_prefix=None)
+    XEN_URL = values.URLValue('', environ_prefix=None)
+    XEN_USERNAME = values.Value('', environ_prefix=None)
+    XEN_PASSWORD = values.Value('', environ_prefix=None)
 
-    ILO_USERNAME = values.Value(environ_prefix=None)
-    ILO_PASSWORD = values.SecretValue(environ_prefix=None)
+    ILO_USERNAME = values.Value('', environ_prefix=None)
+    ILO_PASSWORD = values.Value('', environ_prefix=None)
 
     # Path to JSON file mapping FDQNs to PDUs with format:
     # {
@@ -232,20 +238,20 @@ class Base(Configuration, Celery):
 
     REBOOT_METHODS = values.ListValue([
         'ssh_reboot',
-        'ipmi_reboot',  # ipmi pdu for iX hardware (linux, xp, w8, w10)
+        'ipmi_reset',
+        'ipmi_cycle',
         'snmp_reboot',  # snmp pdu for mac minis
-        'xen_reboot',  # for moonshot HW
         'ilo_reboot',  # for moonshot HW
         'file_bugzilla_bug',  # give up and file a bug
     ], environ_prefix=None)
 
 
 class Dev(Base):
-    DEBUG = values.BooleanValue(True)
-    ALLOWED_HOSTS = values.ListValue(['localhost', '127.0.0.1'])
-    CORS_ORIGIN = values.Value('localhost')
+    DEBUG = values.BooleanValue(True, environ_prefix=None)
+    ALLOWED_HOSTS = values.ListValue(['tools.taskcluster.net', 'localhost', '127.0.0.1'], environ_prefix=None)
+    CORS_ORIGIN = values.Value('*', environ_prefix=None)
 
-    BUGZILLA_URL = values.Value('https://landfill.bugzilla.org/bugzilla-5.0-branch/rest/')
+    BUGZILLA_URL = values.Value('https://landfill.bugzilla.org/bugzilla-5.0-branch/rest/', environ_prefix=None)
 
 
 class Prod(Base):

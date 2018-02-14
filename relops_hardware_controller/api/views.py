@@ -37,18 +37,18 @@ logger = logging.getLogger(__name__)
 @api_view(['OPTIONS', 'POST'])
 @authentication_classes((TaskclusterAuthentication,))
 @renderer_classes((JSONRenderer,))
-def queue_job(request, worker_id, worker_group, format=None):
+def queue_job(request, worker_id, format=None):
     if request.method == 'OPTIONS':
-        return queue_job_options(request, worker_id, worker_group, format=None)
+        return queue_job_options(request, worker_id, format=None)
     elif request.method == 'POST':
-        return queue_job_create(request, worker_id, worker_group, format=None)
+        return queue_job_create(request, worker_id, format=None)
     else:
         return Response({}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 @api_view(['OPTIONS'])
 @renderer_classes((JSONRenderer,))
-def queue_job_options(request, worker_id, worker_group, format=None):
+def queue_job_options(request, worker_id, format=None):
     return Response({}, status=status.HTTP_200_OK)
 
 
@@ -57,14 +57,19 @@ def queue_job_options(request, worker_id, worker_group, format=None):
 @authentication_classes((TaskclusterAuthentication,))
 @permission_classes((IsAuthenticated, HasTaskclusterScopes,))
 @renderer_classes((JSONRenderer,))
-def queue_job_create(request, worker_id, worker_group, format=None):
+def queue_job_create(request, worker_id, format=None):
     serializer = JobSerializer(data=dict(
         worker_id=worker_id,
-        worker_group=worker_group,
-        task_name=request.GET.get('task_name', '')
+        worker_group=request.GET.get('worker_group,', 'none'),
+        client_id=request.user.client_id,
+        task_name=request.GET.get('task_name', ''),
+        provisioner_id=request.GET.get('provisioner_id', ''),
+        worker_type=request.GET.get('worker_type', ''),
+        http_origin=request.META.get('HTTP_ORIGIN', ''),
     ))
 
     if not serializer.is_valid():
+        logger.warn('serializing failed: {}'.format(serializer.errors))
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     result = celery_call_command.delay(serializer.validated_data)

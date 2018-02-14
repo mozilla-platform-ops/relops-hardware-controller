@@ -7,22 +7,33 @@ from rest_framework import serializers
 
 
 class JobSerializer(serializers.Serializer):
-    # Celery Task Result ID
     task_id = serializers.UUIDField(
         format='hex_verbose',
         required=False)
+
+    http_origin = serializers.CharField(
+        required=False)
+
+    client_id = serializers.RegexField(
+        r'^(mozilla-ldap/[^ @]+@mozilla.com)$',
+        required=False)
+
+    provisioner_id = serializers.CharField(
+        required=False)
+
+    worker_type = serializers.CharField(
+        required=False)
+
+    worker_group = serializers.CharField(
+        required=False)
+
+    worker_id = serializers.CharField(
+        max_length=128,
+        min_length=1,
+        required=True)
 
     # what task to run on the machine
     task_name = serializers.RegexField(
         r'^({})$'.format('|'.join(settings.TASK_NAMES)),
         required=True)
 
-    # which TC worker callback args
-    worker_id = serializers.CharField(
-        max_length=128,
-        min_length=1,
-        required=True)
-    worker_group = serializers.CharField(
-        max_length=128,
-        min_length=1,
-        required=False)
