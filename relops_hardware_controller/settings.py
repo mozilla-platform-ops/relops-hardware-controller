@@ -156,7 +156,7 @@ class Base(Configuration, Celery):
         'UNAUTHENTICATED_USER': 'relops_hardware_controller.api.models.TaskclusterUser',
     }
 
-    TASKCLUSTER_CLIENT_ID = values.Value('', environ_prefix=None)
+    TASKCLUSTER_CLIENT_ID = values.Value(environ_prefix=None)
     TASKCLUSTER_ACCESS_TOKEN = values.SecretValue(environ_prefix=None)
 
     TASK_NAMES = values.ListValue([
@@ -174,7 +174,7 @@ class Base(Configuration, Celery):
     ], environ_prefix=None)
 
     REQUIRED_TASKCLUSTER_SCOPE_SETS = values.SingleNestedListValue([
-        ['project:releng:{}'.format(task_name)]
+        ['project:releng:roller:{}'.format(task_name)]
         for task_name in TASK_NAMES.value
     ], seq_separator=',', environ_prefix=None)
 
@@ -183,12 +183,12 @@ class Base(Configuration, Celery):
     BUGZILLA_URL = values.URLValue(environ_prefix=None)
     BUGZILLA_API_KEY = values.SecretValue(environ_prefix=None)
 
-    XEN_URL = values.URLValue(environ_prefix=None)
-    XEN_USERNAME = values.Value(environ_prefix=None)
-    XEN_PASSWORD = values.SecretValue(environ_prefix=None)
+    XEN_URL = values.URLValue('', environ_prefix=None)
+    XEN_USERNAME = values.Value('', environ_prefix=None)
+    XEN_PASSWORD = values.SecretValue('', environ_prefix=None)
 
-    ILO_USERNAME = values.Value(environ_prefix=None)
-    ILO_PASSWORD = values.SecretValue(environ_prefix=None)
+    ILO_USERNAME = values.Value('', environ_prefix=None)
+    ILO_PASSWORD = values.SecretValue('', environ_prefix=None)
 
     # Path to JSON file mapping FDQNs to PDUs with format:
     # {
