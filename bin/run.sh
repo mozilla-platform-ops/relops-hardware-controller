@@ -37,7 +37,8 @@ case $1 in
     ${CMD_PREFIX} gunicorn relops_hardware_controller.wsgi:application -b 0.0.0.0:${PORT} --workers ${GUNICORN_WORKERS} --worker-class="egg:meinheld#gunicorn_worker" --access-logfile -
     ;;
   web-dev)
-    exec python manage.py runserver 0.0.0.0:${PORT}
+    ${CMD_PREFIX} gunicorn relops_hardware_controller.wsgi:application -b 0.0.0.0:${PORT} --workers ${GUNICORN_WORKERS} --worker-class="egg:meinheld#gunicorn_worker" --access-logfile - --log-level debug --reload
+    #exec python manage.py runserver 0.0.0.0:${PORT}
     ;;
   worker)
     exec celery -A relops_hardware_controller.celery:app worker -l debug
