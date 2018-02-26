@@ -11,8 +11,17 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+import logging
+import json
 
 from configurations import Configuration, values
+
+
+class JSONFileValue(values.CastingMixin, values.Value):
+    caster = 'relops_hardware_controller.settings.load_json_file'
+
+def load_json_file(path):
+    return json.load(open(path, 'r'))
 
 
 class Celery:
@@ -190,48 +199,8 @@ class Base(Configuration, Celery):
     ILO_USERNAME = values.Value('', environ_prefix=None)
     ILO_PASSWORD = values.Value('', environ_prefix=None)
 
-    # Path to JSON file mapping FDQNs to PDUs with format:
-    # {
-    #   "t-yosemite-r7-0001.test.releng.scl3.mozilla.com": {
-    #     "ssh": {
-    #       "user": "reboot-forcecommand-user",
-    #       "key_file": "~/.ssh/test_ipmitool_pass.key",
-    #      }
-    #    },
-    #   ...
-    # }
-    FQDN_TO_SSH_FILE = values.PathValue('ssh.json', environ_prefix=None)
-
-    # Path to JSON file mapping FDQNs to PDUs with format:
-    # {
-    #   "t-yosemite-r7-0001.test.releng.scl3.mozilla.com": {
-    #     "ipmi": {
-    #       "user": "test_reboot_user",
-    #       "password": "test_ipmitool_pass"
-    #     }
-    #   },
-    #   ...
-    # }
-    FQDN_TO_IPMI_FILE = values.PathValue('ipmi.json', environ_prefix=None)
-
-    # Path to JSON file mapping FDQNs to PDUs with format:
-    # {
-    #   "t-yosemite-r7-0001.test.releng.scl3.mozilla.com": {
-    #     "pdu": "pdu1.r201-6.ops.releng.scl3.mozilla.com:AA1"
-    #    },
-    #   ...
-    # }
-    FQDN_TO_PDU_FILE = values.PathValue('pdus.json', environ_prefix=None)
-
-    # Path to JSON file mapping FDQNs to PDUs with format:
-    # {
-    #   "t-yosemite-r7-0001.test.releng.scl3.mozilla.com": {
-    #     "xen_uuid": "pdu1.r201-6.ops.releng.scl3.mozilla.com:AA1"
-    #    },
-    #   ...
-    # }
-    FQDN_TO_XEN_FILE = values.PathValue('xen.json', environ_prefix=None)
-
+    WORKER_CONFIG = JSONFileValue('', environ_prefix=None)
+    
     # how many seconds to wait for a machine to go down and come back up
     DOWN_TIMEOUT = values.IntegerValue(60, environ_prefix=None)
     UP_TIMEOUT = values.IntegerValue(300, environ_prefix=None)
