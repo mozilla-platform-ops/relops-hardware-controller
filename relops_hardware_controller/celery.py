@@ -47,13 +47,13 @@ res = dns.resolver.get_default_resolver()
 res.search = search
 
 
-def get_hostname(worker_id):
+def dns_lookup(worker_id):
     try:
         result = res.query(worker_id)
-        return result.canonical_name
+        return result.canonical_name, result[0]
     except Exception as e:
         logging.warn('worker_id dns lookup failed: {}'.format(e))
-        return worker_id
+        return worker_id, None
 
 
 @app.task
@@ -67,7 +67,7 @@ def celery_call_command(job_data):
     logging.debug('task_name:{}'.format(task))
 
     logging.debug('job_data:{}'.format(job_data))
-    hostname=get_hostname(job_data['worker_id'])
+    (hostname, ip) = dns_lookup(job_data['worker_id'])
     cmd_class = load_command_class('relops_hardware_controller.api', task)
     logging.debug('cmd_class:{}'.format(cmd_class))
 
@@ -75,7 +75,7 @@ def celery_call_command(job_data):
     call_command(cmd_class, hostname, command, stdout=stdout)
 
     notify = taskcluster.Notify()
-    subject = '{}[{}] {}'.format(job_data['worker_id'], hostname, command)
+    subject = '{}[{}] {}'.format(job_data['worker_id'], ip, command)
     message = stdout.getvalue()
     link = '{http_origin}/provisioners/{provisioner_id}/worker-types/{worker_type}/workers/{worker_group}/{worker_id}'.format(**job_data)
 
@@ -83,21 +83,23 @@ def celery_call_command(job_data):
     try:
         username = re.search('^mozilla-ldap\/([^ @]+)@mozilla\.com$', client_id).group(1)
 
+        text_link_max = 40
         mail_payload = {
             'subject': subject,
             'address': '{}@mozilla.com'.format(username),
             'replyTo': 'relops@mozilla.com',
             'content': message,
-            'link': { 'href':link, 'text':link[:40] },
+            'link': { 'href':link, 'text':link[:text_link_max] },
         }
         notify.email(mail_payload)
 
-        l = 500 - len(subject)
-        irc_payload = {
-            'user': username,
-            'message': subject + (message[:l] + ' ...') if len(message) > l else message,
-        }
-        notify.irc(irc_payload)
+        message = '{}: {}'.format(subject, message)
+        irc_message_max = 510
+        while message:
+            chunk = message[:irc_message_max]
+            notify.irc({ 'user': username, 'message': chunk })
+            message = message[irc_message_max:]
+
     except Exception as e:
         logging.warn(e)
         pass
