@@ -49,8 +49,8 @@ res.search = search
 
 def get_hostname(worker_id):
     try:
-        ip = res.query(worker_id)
-        return ip.canonical_name
+        result = res.query(worker_id)
+        return result.canonical_name
     except Exception as e:
         logging.warn('worker_id dns lookup failed: {}'.format(e))
         return worker_id
