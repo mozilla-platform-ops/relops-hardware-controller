@@ -24,13 +24,13 @@ class Command(BaseCommand):
             help='IPMI command')
 
     def handle(self, hostname, command, *args, **options):
-        config= settings.WORKER_CONFIG
+        config = settings.WORKER_CONFIG
         servers = config['servers']
         try:
             server = servers[hostname]
         except:
             server = servers[hostname.split('.')[0]]
-            hostname= hostname.split('.')[0]
+            hostname = hostname.split('.')[0]
 
         args = []
 
