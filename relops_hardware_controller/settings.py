@@ -209,8 +209,8 @@ class Base(Configuration, Celery):
         'ipmi_reset',
         'ipmi_cycle',
         'snmp_reboot',  # snmp pdu for mac minis
-        'ilo_reboot',  # for moonshot HW
-        'ssh_reboot',
+        # 'ilo_reboot',  # for moonshot HW
+        # 'ssh_reboot',
         'file_bugzilla_bug',  # give up and file a bug
     ], environ_prefix=None)
 
