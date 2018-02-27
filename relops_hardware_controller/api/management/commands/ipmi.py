@@ -27,10 +27,10 @@ class Command(BaseCommand):
         config = settings.WORKER_CONFIG
         servers = config['servers']
         try:
-            server = servers[hostname]
-        except:
             server = servers[hostname.split('.')[0]]
             hostname = hostname.split('.')[0]
+        except:
+            server = servers[hostname]
 
         args = []
 
