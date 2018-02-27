@@ -199,7 +199,7 @@ class Base(Configuration, Celery):
     ILO_USERNAME = values.Value('', environ_prefix=None)
     ILO_PASSWORD = values.Value('', environ_prefix=None)
 
-    WORKER_CONFIG = JSONFileValue('', environ_prefix=None)
+    WORKER_CONFIG = JSONFileValue('', environ_prefix=None, environ_name=WORKER_CONFIG_PATH)
     
     # how many seconds to wait for a machine to go down and come back up
     DOWN_TIMEOUT = values.IntegerValue(60, environ_prefix=None)
