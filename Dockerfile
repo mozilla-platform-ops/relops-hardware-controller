@@ -22,10 +22,8 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         apt-transport-https build-essential curl git libpq-dev \
         postgresql-client iputils-ping ipmitool openssh-client \
-        snmp
-
-# Clean up apt
-RUN apt-get autoremove -y && \
+        snmp && \
+    apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
