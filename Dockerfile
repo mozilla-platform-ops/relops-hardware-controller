@@ -6,8 +6,6 @@ ENV PYTHONUNBUFFERED=1 \
     DJANGO_CONFIGURATION=Prod \
     PORT=8000
 
-EXPOSE $PORT
-
 # add a non-privileged user for installing and running the application
 # don't use --create-home option to prevent populating with skeleton files
 RUN mkdir /app && \
