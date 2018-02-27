@@ -6,8 +6,6 @@ ENV PYTHONUNBUFFERED=1 \
     DJANGO_CONFIGURATION=Prod \
     PORT=8000
 
-EXPOSE $PORT
-
 # add a non-privileged user for installing and running the application
 # don't use --create-home option to prevent populating with skeleton files
 RUN mkdir /app && \
@@ -24,10 +22,8 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         apt-transport-https build-essential curl git libpq-dev \
         postgresql-client iputils-ping ipmitool openssh-client \
-        snmp
-
-# Clean up apt
-RUN apt-get autoremove -y && \
+        snmp && \
+    apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

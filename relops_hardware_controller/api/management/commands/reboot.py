@@ -79,82 +79,44 @@ class Command(BaseCommand):
 
     def handle(self, hostname, command, *args, **options):
         start = time.time()
-        ssh_config = json.load(open(settings.FQDN_TO_SSH_FILE, 'r'))
-        ipmi_config = json.load(open(settings.FQDN_TO_IPMI_FILE, 'r'))
-        pdu_config = json.load(open(settings.FQDN_TO_PDU_FILE, 'r'))
-        xen_config = json.load(open(settings.FQDN_TO_XEN_FILE, 'r'))
+        config = settings.WORKER_CONFIG
+        try:
+            server = config['servers'][hostname.split('.')[0]]
+        except:
+            server = config['servers'][hostname]
 
         logger.debug('reboot_methods:{}'.format(settings.REBOOT_METHODS))
         stdout = StringIO()
         for reboot_method in settings.REBOOT_METHODS:
             logger.debug('reboot_method:{}'.format(reboot_method))
-            if reboot_method == 'ssh_reboot':
-                if hostname not in ssh_config:
-                    logger.info('skipping ssh reboot of %s since we can\'t'
-                                ' find ssh creds in settings.FQDN_TO_SSH_FILE.', hostname)
-                    continue
-
-                if not can_ping(hostname):
-                    logger.info('skipping ssh reboot of %s since we can\'t ping the machine.', hostname)
-                    continue
-
-                reboot_args = [
-                    '-l', ssh_config[hostname]['ssh']['user'],
-                    '-i', ssh_config[hostname]['ssh']['key_file'],
-                    hostname,
-                ]
-            elif reboot_method == 'ipmi_reset':
-                reboot_method = 'ipmi'
-                if hostname not in ipmi_config:
-                    logger.info('skipping ipmi reset of %s since we can\'t'
-                                ' find creds in settings.FQDN_TO_IPMI_FILE.', hostname)
-                    continue
-
-                reboot_args = [
-                    hostname,
-                    'ipmi_reset'
-                ]
-            elif reboot_method == 'ipmi_cycle':
-                reboot_method = 'ipmi'
-                if hostname not in ipmi_config:
-                    logger.info('skipping ipmi cycle of %s since we can\'t'
-                                ' find creds in settings.FQDN_TO_IPMI_FILE.', hostname)
-                    continue
-
-                reboot_args = [
-                    hostname,
-                    'ipmi_cycle'
-                ]
-            elif reboot_method == 'snmp_reboot':
-                if hostname not in pdu_config:
-                    logger.info('skipping snmp reboot of %s since we can\'t'
-                                ' find creds in settings.FQDN_TO_PDU_FILE.', hostname)
-                    continue
-
-                pdu_host, port_args = pdu_config[hostname]['pdu'].rsplit(':', 1)
-
-                reboot_args = [pdu_host] + list(port_args)
-            elif reboot_method == 'xenapi_reboot':
-                if hostname not in xen_config:
-                    logger.info('skipping xenapi reboot of %s since we can\'t'
-                                ' find a host uuid in settings.FQDN_TO_XEN_FILE.', hostname)
-                    continue
-
-                reboot_args = [xen_config[hostname]['xen_uuid']]
-            elif reboot_method == 'ilo_reboot':
-                reboot_args = [hostname]
-            elif reboot_method == 'file_bugzilla_bug':
-                reboot_args = [hostname]
-            else:
-                raise NotImplementedError()
-
-            # try the reboot method
             try:
+                if reboot_method == 'ssh_reboot':
+                    reboot_args = [
+                        '-l', server['ssh']['user'],
+                        '-i', server['ssh']['key_file'],
+                    ]
+                elif reboot_method == 'ipmi_reset':
+                    reboot_args = [ reboot_method ]
+                    reboot_method = 'ipmi'
+                elif reboot_method == 'ipmi_cycle':
+                    reboot_args = [ reboot_method ]
+                    reboot_method = 'ipmi'
+                elif reboot_method == 'snmp_reboot':
+                    hostname, port_args = server['pdu'].rsplit(':', 1)
+                    reboot_args = list(port_args)
+                elif reboot_method == 'xenapi_reboot':
+                    reboot_args = server['xen']['reboot']
+                elif reboot_method == 'ilo_reboot':
+                    hostname, reboot_args = server['ilo']
+                elif reboot_method == 'file_bugzilla_bug':
+                    pass
+                else:
+                    raise NotImplementedError()
+
                 call_command(load_command_class('relops_hardware_controller.api', reboot_method),
                              stdout=stdout,
-                             *reboot_args)
+                             hostname, *reboot_args)
 
-                # reboot method succeeded wait for machine to go down then come back up
                 if reboot_succeeded(hostname):
                     break
             except Exception as error:

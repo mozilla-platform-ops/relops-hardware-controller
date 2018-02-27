@@ -14,42 +14,48 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            'ip',
+            'hostname',
             type=str,
-            help='machine ip address')
+            help='machine hostname')
 
         parser.add_argument(
             'command',
             type=str,
             help='IPMI command')
 
-    def handle(self, ip, command, *args, **options):
-        ipmi_config = json.load(open(settings.FQDN_TO_IPMI_FILE, 'r'))
+    def handle(self, hostname, command, *args, **options):
+        config = settings.WORKER_CONFIG
+        servers = config['servers']
+        try:
+            server = servers[hostname.split('.')[0]]
+            hostname = hostname.split('.')[0]
+        except:
+            server = servers[hostname]
 
         args = []
 
-        parent = ipmi_config[ip]['ipmi'].get('ip', None)
+        parent = server.get('parent', None)
         if parent is not None:
-            addr = ipmi_config[ip]['ipmi'].get('addr', None)
-            ip = parent
+            addr = server.get('addr', None)
+            hostname = parent
         else:
             addr = None
 
-        hwtype = ipmi_config[parent]['ipmi'].get('type', None)
-        remap = ipmi_config['types'].get(hwtype, None)
+        hwtype = servers[hostname].get('type', None)
+        remap = config['types'].get(hwtype, None)
         if remap is not None:
             args += remap.get('args', None)
             if addr is not None:
                 args += remap['map'][addr]
             command = remap['commands'].get(command, [command])
 
-        user = ipmi_config[ip]['ipmi']['user']
-        password = ipmi_config[ip]['ipmi']['password']
+        user = servers[hostname]['user']
+        password = servers[hostname]['password']
 
         run_cmd = functools.partial(
             call_command,
             load_command_class('relops_hardware_controller.api', 'ipmitool'),
-            '-H', ip,
+            '-H', hostname,
             '-U', user,
             '-P', password,
             *args)
