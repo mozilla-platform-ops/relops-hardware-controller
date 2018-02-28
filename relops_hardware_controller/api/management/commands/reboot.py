@@ -114,8 +114,9 @@ class Command(BaseCommand):
                     raise NotImplementedError()
 
                 call_command(load_command_class('relops_hardware_controller.api', reboot_method),
+                             hostname,
                              stdout=stdout,
-                             hostname, *reboot_args)
+                             *reboot_args)
 
                 if reboot_succeeded(hostname):
                     break
