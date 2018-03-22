@@ -81,7 +81,7 @@ def celery_call_command(job_data):
 
     client_id = job_data['client_id']
     try:
-        username = re.search('^mozilla-ldap\/([^ @]+)@mozilla\.com$', client_id).group(1)
+        username = re.search('^mozilla(-auth0/ad\|Mozilla-LDAP\||-ldap\/)([^ @]+)(@mozilla\.com)?$', client_id).group(2)
 
         text_link_max = 40
         mail_payload = {
