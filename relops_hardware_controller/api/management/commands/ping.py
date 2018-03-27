@@ -52,4 +52,4 @@ class Command(BaseCommand):
         return subprocess.check_output(call_args,
                                        stderr=subprocess.STDOUT,
                                        encoding='utf-8',
-                                       timeout=options['timeout'])
+                                       timeout=(2 + options['timeout']))

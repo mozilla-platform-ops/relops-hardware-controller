@@ -7,6 +7,7 @@ import logging
 import json
 from io import StringIO
 import re
+import subprocess
 
 import dns.resolver
 import dns.name
@@ -72,16 +73,26 @@ def celery_call_command(job_data):
     logging.debug('cmd_class:{}'.format(cmd_class))
 
     stdout = StringIO()
-    call_command(cmd_class, hostname, command, stdout=stdout)
+    try:
+        call_command(cmd_class, hostname, command, stdout=stdout, stderr=stdout)
+    except subprocess.TimeoutExpired as e:
+        logging.warn(e)
+        message = e.output
+    except subprocess.CalledProcessError as e:
+        logging.warn(e)
+        message = e.output
+    except Exception as e:
+        message = e
+    else:
+        message = stdout.getvalue()
 
     notify = taskcluster.Notify()
     subject = '{}[{}] {}'.format(job_data['worker_id'], ip, command)
-    message = stdout.getvalue()
     link = '{http_origin}/provisioners/{provisioner_id}/worker-types/{worker_type}/workers/{worker_group}/{worker_id}'.format(**job_data)
 
     client_id = job_data['client_id']
     try:
-        username = re.search('^mozilla-ldap\/([^ @]+)@mozilla\.com$', client_id).group(1)
+        username = re.search('^mozilla(-auth0/ad\|Mozilla-LDAP\||-ldap\/)([^ @]+)(@mozilla\.com)?$', client_id).group(2)
 
         text_link_max = 40
         mail_payload = {

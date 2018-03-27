@@ -15,7 +15,7 @@ class JobSerializer(serializers.Serializer):
         required=False)
 
     client_id = serializers.RegexField(
-        r'^(mozilla-ldap/[^ @]+@mozilla.com)$',
+        r'^(mozilla.*)$',
         required=False)
 
     provisioner_id = serializers.CharField(
