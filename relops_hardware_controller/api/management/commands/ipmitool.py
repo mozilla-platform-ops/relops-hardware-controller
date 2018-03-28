@@ -63,9 +63,9 @@ class Command(BaseCommand):
             '-L',
             dest='privlvl',
             type=str,
-            default='ADMINISTRATOR',
+            default='OPERATOR',
             help='Force session privilege level. Can be CALLBACK, USER, '
-            'OPERATOR, ADMINISTRATOR. Default is ADMINISTRATOR.',
+            'OPERATOR, ADMINISTRATOR. Default is OPERATOR.',
         )
         parser.add_argument(
             '-p',
