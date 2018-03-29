@@ -187,6 +187,8 @@ class Base(Configuration, Celery):
         for task_name in TASK_NAMES.value
     ], seq_separator=',', environ_prefix=None)
 
+    VALID_WORKER_ID_REGEX = values.Value('^t-linux64-ms.*', environ_prefix=None)
+
     # Worker Settings
 
     BUGZILLA_URL = values.URLValue(environ_prefix=None)
