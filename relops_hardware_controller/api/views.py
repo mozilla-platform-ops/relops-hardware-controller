@@ -3,6 +3,7 @@
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
+import re
 
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
@@ -52,21 +53,28 @@ def queue_job_options(request, worker_id, format=None):
     return Response({}, status=status.HTTP_200_OK)
 
 
+def is_managed_host(worker_id):
+    return re.match(settings.VALID_WORKER_ID_REGEX, worker_id)
+
 @require_taskcluster_scope_sets(settings.REQUIRED_TASKCLUSTER_SCOPE_SETS)
 @api_view(['POST'])
 @authentication_classes((TaskclusterAuthentication,))
 @permission_classes((IsAuthenticated, HasTaskclusterScopes,))
 @renderer_classes((JSONRenderer,))
 def queue_job_create(request, worker_id, format=None):
+    task_name = request.GET.get('task_name', '')
     serializer = JobSerializer(data=dict(
         worker_id=worker_id,
-        worker_group=request.GET.get('worker_group,', 'none'),
+        worker_group=request.GET.get('worker_group', 'none'),
         client_id=request.user.client_id,
-        task_name=request.GET.get('task_name', ''),
+        task_name=task_name,
         provisioner_id=request.GET.get('provisioner_id', ''),
         worker_type=request.GET.get('worker_type', ''),
         http_origin=request.META.get('HTTP_ORIGIN', ''),
     ))
+
+    if task_name != 'ping' and not is_managed_host(worker_id):
+        return Response('Not a managed host.', status=status.HTTP_404_NOT_FOUND)
 
     if not serializer.is_valid():
         logger.warn('serializing failed: {}'.format(serializer.errors))
