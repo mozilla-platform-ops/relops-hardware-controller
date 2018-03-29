@@ -7,7 +7,7 @@ from django.core.validators import (
 )
 
 
-hostname_re = r'^[-_\.a-z0-9](?:[-_\.a-z0-9-]{0,61}[-_\.a-z0-9])?$'
+hostname_re = r'^[-_\.a-zA-Z0-9](?:[-_\.a-zA-Z0-9-]{0,61}[-_\.a-zA-Z0-9])?$'
 
 
 def validate_host(host):
