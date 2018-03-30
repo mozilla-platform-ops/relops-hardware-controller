@@ -64,7 +64,7 @@ def is_managed_host(worker_id):
 def queue_job_create(request, worker_id, format=None):
     task_name = request.GET.get('task_name', '')
     serializer = JobSerializer(data=dict(
-        worker_id=worker_id,
+        worker_id=worker_id.lower(),
         worker_group=request.GET.get('worker_group', 'none'),
         client_id=request.user.client_id,
         task_name=task_name,
