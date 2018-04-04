@@ -62,8 +62,7 @@ def reboot_succeeded(fqdn):
 
 
 class Command(BaseCommand):
-    help = '''Tries to reboot a machine using ssh, ipmi, snmp, xen, then ilo.
-    When all of those methods fail it files a bug in bugzilla.'''
+    help = '''Tries reboot actions from REBOOT_METHODS environment var.'''
 
     def add_arguments(self, parser):
         # Positional arguments
