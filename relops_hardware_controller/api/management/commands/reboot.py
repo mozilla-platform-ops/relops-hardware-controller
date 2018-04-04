@@ -121,7 +121,7 @@ class Command(BaseCommand):
                     break
             except Exception as error:
                 # try the next reboot method without waiting for the machine to come up
-                logger.info('reboot: %s of %s failed with error: %s', reboot_method, hostname, error)
+                logger.warn('reboot: %s of %s failed with error: %s', reboot_method, hostname, error)
                 continue
 
             # reboot method failed or didn't come up so try the next method
