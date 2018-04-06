@@ -74,6 +74,9 @@ def celery_call_command(job_data):
     cmd_class = load_command_class('relops_hardware_controller.api', task)
     logging.debug('cmd_class:{}'.format(cmd_class))
 
+    subject = '{}[{}] {}'.format(job_data['worker_id'], ip, command)
+    logging.info(subject)
+
     stdout = StringIO()
     try:
         call_command(cmd_class, hostname, command, stdout=stdout, stderr=stdout)
@@ -91,9 +94,14 @@ def celery_call_command(job_data):
         message = e
     else:
         message = stdout.getvalue()
+        logging.info(message)
+
+    # Ignore most Notify logging
+    log_level = logging.getLogger().level
+    logging.getLogger().setLevel(logging.CRITICAL)
 
     notify = taskcluster.Notify()
-    subject = '{}[{}] {}'.format(job_data['worker_id'], ip, command)
+
     link = '{http_origin}/provisioners/{provisioner_id}/worker-types/{worker_type}/workers/{worker_group}/{worker_id}'.format(**job_data)
     text_link_max = 40
     mail_payload = {
@@ -124,3 +132,5 @@ def celery_call_command(job_data):
             message = message[irc_message_max:]
     except Exception as e:
         logging.warn(e)
+
+    logging.getLogger().setLevel(log_level)
