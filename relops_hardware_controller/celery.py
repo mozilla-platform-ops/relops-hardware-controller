@@ -13,6 +13,8 @@ import dns.resolver
 import dns.name
 
 from celery import Celery
+
+from django.conf import settings
 from django.core.management import (
     call_command,
     load_command_class,
@@ -108,7 +110,7 @@ def celery_call_command(job_data):
     try:
         client_id = job_data['client_id']
         username = re.search('^mozilla(-auth0/ad\|Mozilla-LDAP\||-ldap\/)([^ @]+)(@mozilla\.com)?$', client_id).group(2)
-        notify.email({**mail_payload, 'address': '{}@mozilla.com'.format(username)})
+        notify.email({**mail_payload, 'address': '{}@mozilla.com'.format(username))
     except Exception as e:
         logging.warn(e)
 
