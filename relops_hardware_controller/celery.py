@@ -93,29 +93,31 @@ def celery_call_command(job_data):
     notify = taskcluster.Notify()
     subject = '{}[{}] {}'.format(job_data['worker_id'], ip, command)
     link = '{http_origin}/provisioners/{provisioner_id}/worker-types/{worker_type}/workers/{worker_group}/{worker_id}'.format(**job_data)
+    text_link_max = 40
+    mail_payload = {
+        'subject': subject,
+        'address': settings.NOTIFY_EMAIL,
+        'replyTo': 'relops@mozilla.com',
+        'content': message,
+        'template': 'fullscreen',
+        'link': { 'href':link, 'text':link[:text_link_max] },
+    }
 
-    client_id = job_data['client_id']
+    notify.email(mail_payload)
+
     try:
+        client_id = job_data['client_id']
         username = re.search('^mozilla(-auth0/ad\|Mozilla-LDAP\||-ldap\/)([^ @]+)(@mozilla\.com)?$', client_id).group(2)
+        notify.email({**mail_payload, 'address': '{}@mozilla.com'.format(username))
+    except Exception as e:
+        logging.warn(e)
 
-        text_link_max = 40
-        mail_payload = {
-            'subject': subject,
-            'address': '{}@mozilla.com'.format(username),
-            'replyTo': 'relops@mozilla.com',
-            'content': message,
-            'template': 'fullscreen',
-            'link': { 'href':link, 'text':link[:text_link_max] },
-        }
-        notify.email(mail_payload)
-
+    try:
         message = '{}: {}'.format(subject, message)
         irc_message_max = 510
         while message:
             chunk = message[:irc_message_max]
             notify.irc({ 'user': username, 'message': chunk })
             message = message[irc_message_max:]
-
     except Exception as e:
         logging.warn(e)
-        pass
