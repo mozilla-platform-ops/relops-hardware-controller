@@ -44,6 +44,7 @@ class Command(BaseCommand):
 
         call_args = [
             'ping',
+            '-q', # only print summary lines
             '-c', str(options['count']),
             '-w', str(options['timeout']),
             host,
