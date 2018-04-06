@@ -105,9 +105,9 @@ def celery_call_command(job_data):
         'link': { 'href':link, 'text':link[:text_link_max] },
     }
 
-    notify.email(mail_payload)
-
     try:
+        notify.email(mail_payload)
+        
         client_id = job_data['client_id']
         username = re.search('^mozilla(-auth0/ad\|Mozilla-LDAP\||-ldap\/)([^ @]+)(@mozilla\.com)?$', client_id).group(2)
         notify.email({**mail_payload, 'address': '{}@mozilla.com'.format(username)})
