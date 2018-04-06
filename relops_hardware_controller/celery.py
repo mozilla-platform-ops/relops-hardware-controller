@@ -117,6 +117,7 @@ def celery_call_command(job_data):
         irc_message_max = 510
         while message:
             chunk = message[:irc_message_max]
+            notify.irc({ 'channel': settings.NOTIFY_IRC_CHANNEL, 'message': chunk })
             notify.irc({ 'user': username, 'message': chunk })
             message = message[irc_message_max:]
     except Exception as e:
