@@ -94,7 +94,6 @@ class Command(BaseCommand):
 
         validate_host(options['address'])
         self.validate_privlvl(options['privlvl'])
-        # TODO: validate all the other args and command
 
         call_args = [
             'ipmitool',
@@ -107,15 +106,9 @@ class Command(BaseCommand):
             '-P', options['password'],
         ] + command
 
-        # Raises exceptions for failure, non-zero returncode, and timeouts
-        logger.debug('calling ipmitool with args: {}'.format(call_args))
+        logger.info(' '.join(call_args))
 
-        # for Python 3 decode to bytes to fix:
-        # TypeError: endswith first arg must be bytes or a tuple of bytes, not str
         output = subprocess.check_output(call_args,
                                          stderr=subprocess.STDOUT,
+                                         encoding='utf-8',
                                          timeout=options['timeout'])
-        if hasattr(output, 'decode'):
-            return output.decode()
-        else:
-            return output
