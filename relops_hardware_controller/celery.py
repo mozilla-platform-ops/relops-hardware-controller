@@ -76,12 +76,16 @@ def celery_call_command(job_data):
     try:
         call_command(cmd_class, hostname, command, stdout=stdout, stderr=stdout)
     except subprocess.TimeoutExpired as e:
-        logging.warn(e)
-        message = e.output
+        logging.exception(e)
+        message = 'timed out'
     except subprocess.CalledProcessError as e:
-        logging.warn(e)
+        logging.exception(e)
         message = e.output
+    except KeyError as e:
+        logging.exception(e)
+        message = 'Key error: {}'.format(e)
     except Exception as e:
+        logging.exception(e)
         message = e
     else:
         message = stdout.getvalue()
@@ -100,6 +104,7 @@ def celery_call_command(job_data):
             'address': '{}@mozilla.com'.format(username),
             'replyTo': 'relops@mozilla.com',
             'content': message,
+            'template': 'fullscreen',
             'link': { 'href':link, 'text':link[:text_link_max] },
         }
         notify.email(mail_payload)
