@@ -48,9 +48,11 @@ class Command(BaseCommand):
             '-c', str(options['count']),
             '-w', str(options['timeout']),
             host,
+            '|tail -2|tr \'\n\' \'\t\'',
         ]
 
-        return subprocess.check_output(call_args,
+        return subprocess.check_output(' '.join(call_args),
                                        stderr=subprocess.STDOUT,
                                        encoding='utf-8',
+                                       shell=True,
                                        timeout=(2 + options['timeout']))
