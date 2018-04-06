@@ -22,7 +22,7 @@ def can_ping(fqdn, count=4, timeout=5):
         logger.debug('pinging %s succeeded', fqdn)
         return True
     except Exception as error:
-        logger.info('pinging %s failed: %s', fqdn, error)
+        logger.warn('pinging %s failed: %s', fqdn, error)
         return False
 
 
@@ -87,6 +87,7 @@ class Command(BaseCommand):
         logger.debug('reboot_methods:{}'.format(settings.REBOOT_METHODS))
         stdout = StringIO()
         for reboot_method in settings.REBOOT_METHODS:
+            reboot_args = []
             logger.debug('reboot_method:{}'.format(reboot_method))
             try:
                 if reboot_method == 'ssh_reboot':
@@ -101,8 +102,7 @@ class Command(BaseCommand):
                     reboot_args = [ reboot_method ]
                     reboot_method = 'ipmi'
                 elif reboot_method == 'snmp_reboot':
-                    hostname, port_args = server['pdu'].rsplit(':', 1)
-                    reboot_args = list(port_args)
+                    reboot_args = server['pdu'].rsplit(':', 1)
                 elif reboot_method == 'xenapi_reboot':
                     reboot_args = server['xen']['reboot']
                 elif reboot_method == 'ilo_reboot':
