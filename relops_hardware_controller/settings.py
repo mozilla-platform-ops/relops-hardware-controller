@@ -187,9 +187,12 @@ class Base(Configuration, Celery):
         for task_name in TASK_NAMES.value
     ], seq_separator=',', environ_prefix=None)
 
-    VALID_WORKER_ID_REGEX = values.Value('^t-linux64-ms.*', environ_prefix=None)
+    VALID_WORKER_ID_REGEX = values.Value('^.*', environ_prefix=None)
 
     # Worker Settings
+
+    NOTIFY_EMAIL = values.Value('dhouse@mozilla.com', environ_prefix=None)
+    NOTIFY_IRC_CHANNEL = values.Value('#roller', environ_prefix=None)
 
     BUGZILLA_URL = values.URLValue(environ_prefix=None)
     BUGZILLA_API_KEY = values.SecretValue(environ_prefix=None)

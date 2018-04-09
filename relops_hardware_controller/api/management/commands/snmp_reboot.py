@@ -3,6 +3,7 @@ import logging
 import subprocess
 import time
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from relops_hardware_controller.api.validators import validate_host
@@ -20,14 +21,20 @@ class Command(BaseCommand):
     # this means in a bit more detail. In any case, this is the base OID
     # for doing any reboots via our PDUs - at least until we buy
     # PDUs that are different.
+
+    # ftp://ftp.servertech.com/Pub/SNMP/sentry3/Sentry3OIDTree.txt
+    #    |  |     +--outletControlAction(11) *+             |   |       +- .11 .<t> .<i> .<o>
+    # <t>: tower
+    # <i>: infeed
+    # <o>: outlet
     base_oid = "1.3.6.1.4.1.1718.3.2.3.1.11"
 
     cmds = dict(on='1', off='2', reboot='3')
 
     port_mappings = {
-        "A": "1",
-        "B": "2",
-        "C": "3"
+        "a": "1",
+        "b": "2",
+        "c": "3"
     }
 
     def add_arguments(self, parser):
@@ -35,11 +42,15 @@ class Command(BaseCommand):
         parser.add_argument(
             'fqdn',
             type=str,
-            help='Remote fqdn to connect to.',
+            help='Affected host.',
+        )
+        parser.add_argument(
+            'pdu',
+            type=str,
+            help='PDU to connect to.',
         )
         parser.add_argument(
             'port',
-            nargs='+',
             type=str,
             help='Wait N seconds before turning the power back on.',
         )
@@ -66,41 +77,44 @@ class Command(BaseCommand):
 
     def _parse_port(self, port):
         try:
-            tower, infeed, outlet = port[0], port[1], port[2:]
+            tower, infeed, outlet = port[0].lower(), port[1].lower(), port[2:]
             for before, after in self.port_mappings.items():
                 tower = tower.replace(before, after)
                 infeed = infeed.replace(before, after)
-            return tower, infeed, outlet
+            return tower, infeed, ''.join(outlet)
         except IndexError:
             logger.error("Couldn't parse port %s", port)
             raise
 
     def run_cmd(self, fqdn, cmd, **options):
+        config = settings.WORKER_CONFIG
+
         # Append tower, infeed, and outlet
         oid = "%s.%s.%s.%s" % (self.base_oid, self.tower, self.infeed, self.outlet)
 
-        return subprocess.check_output([
-                'snmpset',
-                '-v', '1',  # SNMP version to use
-                '-c', 'private',  # SNMP community string
-                fqdn,
-                oid,
-                'i',
-                cmd
-            ],
-            stderr=subprocess.STDOUT,
-            timeout=options['timeout'])
+        snmp_community_string = config['snmp_community_string']
 
-    def handle(self, fqdn, port, *args, **options):
-        validate_host(fqdn)
+        # Example reboot command:
+        # snmpset -v 2c -c comm_string 10.26.9.45 1.3.6.1.4.1.1718.3.2.3.1.11.1.1.8 i 3
+        command = ' '.join([
+            'snmpset',
+            '-v', '2c',  # SNMP version to use
+            '-c', 'snmp_community_string',
+            fqdn,
+            oid,
+            'i', # cmd value type (i: integer)
+            cmd,
+        ])
+        logger.info(command)
 
+        return subprocess.check_output(command.replace('snmp_community_string', snmp_community_string),
+                                       stderr=subprocess.STDOUT,
+                                       encoding='utf-8',
+                                       shell=True,
+                                       timeout=options['timeout'])
+
+    def handle(self, fqdn, pdu, port, *args, **options):
         self.tower, self.infeed, self.outlet = self._parse_port(port)
 
-        logger.info("Powercycling %s via PDU.", fqdn)
-        self.run_cmd(fqdn, self.cmds['off'], **options)
-
-        logger.debug("Power is off, waiting %d seconds before turning it back on.", options['delay'])
-        time.sleep(options['delay'])
-
-        self.run_cmd(fqdn, self.cmds['on'], **options)
-        logger.info("Powercycle of %s completed.", fqdn)
+        logger.info("Powercycling {} via {}.".format(fqdn, pdu))
+        return self.run_cmd(pdu, self.cmds['reboot'], **options)

@@ -13,6 +13,8 @@ import dns.resolver
 import dns.name
 
 from celery import Celery
+
+from django.conf import settings
 from django.core.management import (
     call_command,
     load_command_class,
@@ -72,45 +74,63 @@ def celery_call_command(job_data):
     cmd_class = load_command_class('relops_hardware_controller.api', task)
     logging.debug('cmd_class:{}'.format(cmd_class))
 
+    subject = '{}[{}] {}'.format(job_data['worker_id'], ip, command)
+    logging.info(subject)
+
     stdout = StringIO()
     try:
         call_command(cmd_class, hostname, command, stdout=stdout, stderr=stdout)
     except subprocess.TimeoutExpired as e:
-        logging.warn(e)
-        message = e.output
+        logging.exception(e)
+        message = 'timed out'
     except subprocess.CalledProcessError as e:
-        logging.warn(e)
+        logging.exception(e)
         message = e.output
+    except KeyError as e:
+        logging.exception(e)
+        message = 'Key error: {}'.format(e)
     except Exception as e:
+        logging.exception(e)
         message = e
     else:
         message = stdout.getvalue()
+        logging.info(message)
+
+    # Ignore most Notify logging
+    log_level = logging.getLogger().level
+    logging.getLogger().setLevel(logging.CRITICAL)
 
     notify = taskcluster.Notify()
-    subject = '{}[{}] {}'.format(job_data['worker_id'], ip, command)
+
     link = '{http_origin}/provisioners/{provisioner_id}/worker-types/{worker_type}/workers/{worker_group}/{worker_id}'.format(**job_data)
+    text_link_max = 40
+    mail_payload = {
+        'subject': subject,
+        'address': settings.NOTIFY_EMAIL,
+        'replyTo': 'relops@mozilla.com',
+        'content': message,
+        'template': 'fullscreen',
+        'link': { 'href':link, 'text':link[:text_link_max] },
+    }
 
-    client_id = job_data['client_id']
     try:
-        username = re.search('^mozilla(-auth0/ad\|Mozilla-LDAP\||-ldap\/)([^ @]+)(@mozilla\.com)?$', client_id).group(2)
-
-        text_link_max = 40
-        mail_payload = {
-            'subject': subject,
-            'address': '{}@mozilla.com'.format(username),
-            'replyTo': 'relops@mozilla.com',
-            'content': message,
-            'link': { 'href':link, 'text':link[:text_link_max] },
-        }
         notify.email(mail_payload)
+        
+        client_id = job_data['client_id']
+        username = re.search('^mozilla(-auth0/ad\|Mozilla-LDAP\||-ldap\/)([^ @]+)(@mozilla\.com)?$', client_id).group(2)
+        notify.email({**mail_payload, 'address': '{}@mozilla.com'.format(username)})
+    except Exception as e:
+        logging.warn(e)
 
+    try:
         message = '{}: {}'.format(subject, message)
         irc_message_max = 510
         while message:
             chunk = message[:irc_message_max]
+            notify.irc({ 'channel': settings.NOTIFY_IRC_CHANNEL, 'message': chunk })
             notify.irc({ 'user': username, 'message': chunk })
             message = message[irc_message_max:]
-
     except Exception as e:
         logging.warn(e)
-        pass
+
+    logging.getLogger().setLevel(log_level)
