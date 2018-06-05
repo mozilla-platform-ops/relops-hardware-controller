@@ -27,13 +27,6 @@ def can_ping(fqdn, count=4, timeout=5):
 
 
 def wait_for_state(fn, timeout, interval):
-    '''
-    Waits param timeout seconds in param interval seconds for
-    predicate function param fn to return True.
-
-    returns True when predicate succeeds
-    returns False when predicate fails repeatedly until param timeout is exceeded.
-    '''
     state_name = fn.__name__
     logger.info("Waiting %d seconds for %s", timeout, state_name)
     start = time.time()
@@ -55,40 +48,45 @@ def reboot_succeeded(fqdn):
         return not can_ping(fqdn, count=1, timeout=2)
 
     def is_up():
-        return can_ping(fqdn)
+        return can_ping(fqdn, count=1, timeout=2)
 
-    return wait_for_state(is_down, timeout=settings.DOWN_TIMEOUT, interval=1) and \
+    return wait_for_state(is_down, timeout=settings.DOWN_TIMEOUT, interval=5) and \
         wait_for_state(is_up, timeout=settings.UP_TIMEOUT, interval=5)
 
 
 class Command(BaseCommand):
-    help = '''Tries reboot actions from REBOOT_METHODS environment var.'''
-
     def add_arguments(self, parser):
-        # Positional arguments
-        parser.add_argument(
-            'hostname',
-            type=str,
-            help='A TC worker ID')
-
-        parser.add_argument(
-            'command',
-            type=str,
-            help='A TC worker group')
+        parser.add_argument('hostname', type=str)
+        parser.add_argument('command', type=str)
 
     def handle(self, hostname, command, *args, **options):
+        stdout = StringIO()
+        result_template = '{command}: {stdout}. Completed in {time:.3g} seconds'
         start = time.time()
         config = settings.WORKER_CONFIG
+
+        short_hostname = hostname.split('.')[0]
         try:
-            server = config['servers'][hostname.split('.')[0]]
+            server = config['servers'][short_hostname]
         except:
             server = config['servers'][hostname]
 
         logger.debug('reboot_methods:{}'.format(settings.REBOOT_METHODS))
-        stdout = StringIO()
+        reboot_attempts = ''
+        parent = server.get('parent', None)
+        secrets = [
+            server.get('password', 'secret'),
+            config.get('snmp_community_string', 'secret'),
+            settings.BUGZILLA_API_KEY,
+            settings.TASKCLUSTER_ACCESS_TOKEN,
+        ]
+        if parent is not None:
+            secrets.append(config['servers'][parent].get('password', 'secret'))
+
         for reboot_method in settings.REBOOT_METHODS:
             reboot_args = []
             logger.debug('reboot_method:{}'.format(reboot_method))
+            check = reboot_succeeded
             try:
                 if reboot_method == 'ssh_reboot':
                     reboot_args = [
@@ -108,7 +106,12 @@ class Command(BaseCommand):
                 elif reboot_method == 'ilo_reboot':
                     hostname, reboot_args = server['ilo']
                 elif reboot_method == 'file_bugzilla_bug':
-                    pass
+                    result_template = 'failed. bug {stdout}'
+                    reboot_args = [ 
+                        '--cc', '',
+                        '--log', reboot_attempts,
+                    ]
+                    check = logger.info
                 else:
                     raise NotImplementedError()
 
@@ -117,14 +120,15 @@ class Command(BaseCommand):
                              stdout=stdout,
                              *reboot_args)
 
-                if reboot_succeeded(hostname):
+                if check(hostname):
                     break
             except Exception as error:
-                # try the next reboot method without waiting for the machine to come up
-                logger.warn('reboot: %s of %s failed with error: %s', reboot_method, hostname, error)
-                continue
-
-            # reboot method failed or didn't come up so try the next method
+                logger.exception(error)
+                failure_message = 'reboot: {} of {} failed with error: {}'.format(reboot_method, hostname, repr(error))
+                for key in secrets:
+                    failure_message = failure_message.replace(key, 'secret')
+                logger.warn(failure_message)
+                reboot_attempts += '\\n' + failure_message
 
         elapsed = time.time() - start
-        return '{}: {}. Completed in {:.3g} seconds'.format(reboot_method, stdout.getvalue().rstrip('\n'), elapsed)
+        return result_template.format(command=reboot_method, stdout=stdout.getvalue().rstrip('\n'), time=elapsed)
