@@ -58,11 +58,46 @@ def dns_lookup(worker_id):
         logging.warn('worker_id dns lookup failed: {}'.format(e))
         return worker_id, None
 
+def send_notice(subject, message, client_id, job_data, email=True):
+    # Ignore most Notify logging
+    try:
+        log_level = logging.getLogger().level
+        logging.getLogger().setLevel(logging.CRITICAL)
+
+        if email:
+            link = '{http_origin}/provisioners/{provisioner_id}/worker-types/{worker_type}/workers/{worker_group}/{worker_id}'.format(**job_data)
+            text_link_max = 40
+            mail_payload = {
+                'subject': subject,
+                'address': settings.NOTIFY_EMAIL,
+                'replyTo': 'relops@mozilla.com',
+                'content': message,
+                'template': 'fullscreen',
+                'link': { 'href':link, 'text':link[:text_link_max] },
+            }
+
+            notify.email(mail_payload)
+
+            username = re.search('^mozilla(-auth0/ad\|Mozilla-LDAP\||-ldap\/)([^ @]+)(@mozilla\.com)?$', client_id).group(2)
+            notify.email({**mail_payload, 'address': '{}@mozilla.com'.format(username)})
+    except Exception as e:
+        logging.exception(e)
+
+    try:
+        message = '{}: {}'.format(subject, message)
+        irc_message_max = 510
+        while message:
+            chunk = message[:irc_message_max]
+            notify.irc({ 'channel': settings.NOTIFY_IRC_CHANNEL, 'message': chunk })
+            message = message[irc_message_max:]
+    except Exception as e:
+        logging.warn(e)
+
+    logging.getLogger().setLevel(log_level)
 
 @app.task
 def celery_call_command(job_data):
-    """Loads a Django management command with task_name
-    """
+    notify = taskcluster.Notify()
 
     command = job_data['task_name']
     logging.debug('command_name:{}'.format(command))
@@ -76,6 +111,11 @@ def celery_call_command(job_data):
 
     subject = '{}[{}] {}'.format(job_data['worker_id'], ip, command)
     logging.info(subject)
+    client_id = job_data['client_id']
+
+    if command in ['reboot']:
+        message = subject + ' [{}]'.format(client_id)
+        send_notice(subject, message, client_id, job_data, email=False)
 
     stdout = StringIO()
     try:
@@ -96,41 +136,4 @@ def celery_call_command(job_data):
         message = stdout.getvalue()
         logging.info(message)
 
-    # Ignore most Notify logging
-    log_level = logging.getLogger().level
-    logging.getLogger().setLevel(logging.CRITICAL)
-
-    notify = taskcluster.Notify()
-
-    link = '{http_origin}/provisioners/{provisioner_id}/worker-types/{worker_type}/workers/{worker_group}/{worker_id}'.format(**job_data)
-    text_link_max = 40
-    mail_payload = {
-        'subject': subject,
-        'address': settings.NOTIFY_EMAIL,
-        'replyTo': 'relops@mozilla.com',
-        'content': message,
-        'template': 'fullscreen',
-        'link': { 'href':link, 'text':link[:text_link_max] },
-    }
-
-    try:
-        notify.email(mail_payload)
-        
-        client_id = job_data['client_id']
-        username = re.search('^mozilla(-auth0/ad\|Mozilla-LDAP\||-ldap\/)([^ @]+)(@mozilla\.com)?$', client_id).group(2)
-        notify.email({**mail_payload, 'address': '{}@mozilla.com'.format(username)})
-    except Exception as e:
-        logging.warn(e)
-
-    try:
-        message = '{}: {}'.format(subject, message)
-        irc_message_max = 510
-        while message:
-            chunk = message[:irc_message_max]
-            notify.irc({ 'channel': settings.NOTIFY_IRC_CHANNEL, 'message': chunk })
-            notify.irc({ 'user': username, 'message': chunk })
-            message = message[irc_message_max:]
-    except Exception as e:
-        logging.warn(e)
-
-    logging.getLogger().setLevel(log_level)
+    send_notice(subject, message, client_id, job_data, email=True)
