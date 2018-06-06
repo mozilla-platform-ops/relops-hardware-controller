@@ -1,4 +1,3 @@
-
 import logging
 import subprocess
 
@@ -106,9 +105,13 @@ class Command(BaseCommand):
             '-P', options['password'],
         ] + command
 
-        logger.info(' '.join(call_args))
+        log_command = ' '.join(call_args).replace(options['password'], 'secret')
+        logger.info(log_command)
 
-        output = subprocess.check_output(call_args,
-                                         stderr=subprocess.STDOUT,
-                                         encoding='utf-8',
-                                         timeout=options['timeout'])
+        try:
+            return subprocess.check_output(call_args,
+                                           stderr=subprocess.STDOUT,
+                                           encoding='utf-8',
+                                           timeout=options['timeout'])
+        except subprocess.TimeoutExpired as e:
+            raise subprocess.TimeoutExpired(log_command, timeout=options['timeout'])
