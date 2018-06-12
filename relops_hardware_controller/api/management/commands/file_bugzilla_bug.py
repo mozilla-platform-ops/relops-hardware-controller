@@ -12,6 +12,9 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
+    help = 'Files a new bugzilla bug for the host. Raises for exceptions for bad or invalid responses.'
+    doc_url = 'https://github.com/mozbhearsum/bzrest/blob/master/bzrest/client.py'
+
     def add_arguments(self, parser):
         parser.add_argument('host', type=str)
         parser.add_argument('job_data', type=json.loads)

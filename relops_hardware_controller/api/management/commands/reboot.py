@@ -28,6 +28,13 @@ def can_ping(fqdn, count=4, timeout=5):
 
 
 def wait_for_state(fn, timeout, interval):
+    '''
+    Waits param timeout seconds in param interval seconds for
+    predicate function param fn to return True.
+
+    returns True when predicate succeeds
+    returns False when predicate fails repeatedly until param timeout is exceeded.
+    '''
     state_name = fn.__name__
     logger.info("Waiting %d seconds for %s", timeout, state_name)
     start = time.time()
@@ -49,13 +56,15 @@ def reboot_succeeded(fqdn):
         return not can_ping(fqdn, count=1, timeout=2)
 
     def is_up():
-        return can_ping(fqdn, count=1, timeout=2)
+        return can_ping(fqdn)
 
-    return wait_for_state(is_down, timeout=settings.DOWN_TIMEOUT, interval=5) and \
+    return wait_for_state(is_down, timeout=settings.DOWN_TIMEOUT, interval=1) and \
         wait_for_state(is_up, timeout=settings.UP_TIMEOUT, interval=5)
 
 
 class Command(BaseCommand):
+    help = '''Tries reboot actions from REBOOT_METHODS environment var.'''
+
     def add_arguments(self, parser):
         parser.add_argument('hostname', type=str)
         parser.add_argument('job_data', type=json.loads)
