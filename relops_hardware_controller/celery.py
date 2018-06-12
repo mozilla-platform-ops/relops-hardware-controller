@@ -59,10 +59,12 @@ def dns_lookup(worker_id):
         return worker_id, None
 
 def send_notice(subject, message, job_data, email=True):
-    # Ignore most Notify logging
+    notify = taskcluster.Notify()
+
     client_id = job_data['client_id']
     try:
         log_level = logging.getLogger().level
+        # Ignore most Notify logging
         logging.getLogger().setLevel(logging.CRITICAL)
 
         if email:
@@ -98,8 +100,6 @@ def send_notice(subject, message, job_data, email=True):
 
 @app.task
 def celery_call_command(job_data):
-    notify = taskcluster.Notify()
-
     command = job_data['task_name']
     logging.debug('command_name:{}'.format(command))
     task = 'ipmi' if command.startswith('ipmi') else command
