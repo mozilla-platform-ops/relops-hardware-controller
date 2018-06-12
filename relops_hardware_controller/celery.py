@@ -58,8 +58,9 @@ def dns_lookup(worker_id):
         logging.warn('worker_id dns lookup failed: {}'.format(e))
         return worker_id, None
 
-def send_notice(subject, message, client_id, job_data, email=True):
+def send_notice(subject, message, job_data, email=True):
     # Ignore most Notify logging
+    client_id = job_data['client_id']
     try:
         log_level = logging.getLogger().level
         logging.getLogger().setLevel(logging.CRITICAL)
@@ -106,20 +107,21 @@ def celery_call_command(job_data):
 
     logging.debug('job_data:{}'.format(job_data))
     (hostname, ip) = dns_lookup(job_data['worker_id'])
+    job_data['ip'] = str(ip)
+
     cmd_class = load_command_class('relops_hardware_controller.api', task)
     logging.debug('cmd_class:{}'.format(cmd_class))
 
     subject = '{}[{}] {}'.format(job_data['worker_id'], ip, command)
     logging.info(subject)
-    client_id = job_data['client_id']
 
     if command in ['reboot']:
-        message = subject + ' [{}]'.format(client_id)
-        send_notice(subject, message, client_id, job_data, email=False)
+        message = subject + ' [{}]'.format(job_data['client_id'])
+        send_notice(subject, message, job_data, email=True)
 
     stdout = StringIO()
     try:
-        call_command(cmd_class, hostname, command, stdout=stdout, stderr=stdout)
+        call_command(cmd_class, hostname, json.dumps(job_data), stdout=stdout, stderr=stdout)
     except subprocess.TimeoutExpired as e:
         logging.exception(e)
         message = 'timed out'
@@ -136,4 +138,4 @@ def celery_call_command(job_data):
         message = stdout.getvalue()
         logging.info(message)
 
-    send_notice(subject, message, client_id, job_data, email=True)
+    send_notice(subject, message, job_data, email=True)
