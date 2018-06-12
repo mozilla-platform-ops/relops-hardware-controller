@@ -117,7 +117,7 @@ def celery_call_command(job_data):
 
     if command in ['reboot']:
         message = subject + ' [{}]'.format(job_data['client_id'])
-        send_notice(subject, message, job_data, email=True)
+        send_notice(subject, message, job_data, email=False)
 
     stdout = StringIO()
     try:
