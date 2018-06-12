@@ -185,15 +185,15 @@ class Base(Configuration, Celery):
 
     BUGZILLA_URL = values.URLValue('https://bugzilla-dev.allizom.org', environ_prefix=None)
     BUGZILLA_API_KEY = values.SecretValue(environ_prefix=None)
+    BUGZILLA_REOPEN_STATE = values.Value('REOPENED', environ_prefix=None)
     BUGZILLA_REBOOT_TEMPLATE = values.Value(string.Template(json.dumps(dict(
         api_key='${api_key}',
         product='Infrastructure & Operations',
         component='DCOps',
-        # assigned_to='dhouse@mozilla.com',
-        cc='dhouse@mozilla.com,${cc}',
+        cc='${cc}',
         summary='${hostname} is unreachable',
         version='unspecified',
-        description='The relops controller was unable to reboot ${hostname}:${log}',
+        description='The relops controller was unable to reboot ${hostname}: ${log}',
         blocks='${blocks}',
     ))), environ_prefix=None)
 
@@ -201,19 +201,10 @@ class Base(Configuration, Celery):
         api_key='${api_key}',
         product='Infrastructure & Operations',
         component='CIDuty',
-        # assigned_to='dhouse@mozilla.com',
-        # cc='dhouse@mozilla.com',
         summary='${hostname} problem tracking',
         version='unspecified',
-        # op_sys='All',
-        # platform='All',
         alias='${alias}',
     ))), environ_prefix=None)
-
-    XEN_URL = values.URLValue('', environ_prefix=None)
-    XEN_USERNAME = values.Value('', environ_prefix=None)
-    XEN_PASSWORD = values.Value('', environ_prefix=None)
-
 
     XEN_URL = values.URLValue('', environ_prefix=None)
     XEN_USERNAME = values.Value('', environ_prefix=None)
@@ -229,11 +220,12 @@ class Base(Configuration, Celery):
     UP_TIMEOUT = values.IntegerValue(60, environ_prefix=None)
 
     REBOOT_METHODS = values.ListValue([
+        'ipmi_soft',
+        'ssh_reboot',
         'ipmi_reset',
         'ipmi_cycle',
         'snmp_reboot',  # snmp pdu for mac minis
         # 'ilo_reboot',  # for moonshot HW
-        # 'ssh_reboot',
         'file_bugzilla_bug',  # give up and file a bug
     ], environ_prefix=None)
 
@@ -252,7 +244,7 @@ class Dev(Base):
         cc='dhouse@mozilla.com,${cc}',
         summary='${hostname} is unreachable',
         version='unspecified',
-        description='The relops controller was unable to reboot ${hostname}:${log}',
+        description='The relops controller was unable to reboot ${hostname} ${ip} ${client_id} ${log}',
         blocks='${blocks}',
     ))), environ_prefix=None)
 
@@ -280,7 +272,7 @@ class Prod(Base):
         cc='dhouse@mozilla.com,${cc}',
         summary='${hostname} is unreachable',
         version='unspecified',
-        description='The relops controller was unable to reboot ${hostname}:${log}',
+        description='The relops controller was unable to reboot ${hostname} ${ip} ${client_id} ${log}',
         blocks='${blocks}',
     ))), environ_prefix=None)
 
