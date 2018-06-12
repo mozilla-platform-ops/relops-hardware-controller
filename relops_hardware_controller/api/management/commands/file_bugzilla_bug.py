@@ -18,7 +18,7 @@ class Command(BaseCommand):
         parser.add_argument('--cc', dest='cc', default='', type=str)
         parser.add_argument('--log', dest='log', default='', type=str)
 
-    def handle(self, host, *args, **options):
+    def handle(self, host, job_data, *args, **options):
         url = settings.BUGZILLA_URL + '/rest/bug'
         basic_payload = { 'api_key': settings.BUGZILLA_API_KEY }
         json_header = {
