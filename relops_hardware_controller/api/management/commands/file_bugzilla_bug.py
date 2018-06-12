@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('host', type=str)
+        parser.add_argument('job_data', type=json.loads)
         parser.add_argument('--cc', dest='cc', default='', type=str)
         parser.add_argument('--log', dest='log', default='', type=str)
 
@@ -24,56 +25,62 @@ class Command(BaseCommand):
             "Accept": "application/json",
             "Content-Type": "application/json",
         }
-        reopen_state = 'REOPENED'
-        short_hostname = host.split('.')[0]
+        reopen_state = settings.BUGZILLA_REOPEN_STATE
         tracker_template = settings.BUGZILLA_WORKER_TRACKER_TEMPLATE
         reboot_template = settings.BUGZILLA_REBOOT_TEMPLATE
-
+        short_hostname = host.split('.')[0]
         if 'bugzilla-dev' in url:
-            # bugzilla-dev has some differences
+            # bugzilla-dev aliases fail with dashes
             short_hostname = short_hostname.replace('-', '')
-            reopen_state = 'UNCONFIRMED'
-            tracker_template = string.Template(
-                tracker_template.template.replace('CIDuty', 'RelOps'))
 
-        # Find, reopen, or create parent tracker bug.
-        try:
-            response = requests.get(
-                url + '?alias={}'.format(short_hostname),
-                json=basic_payload,
-                headers=json_header,
-            )
-            logger.warn('get bug: {}'.format(response.json()))
-            response = response.json()['bugs'][0]
-            parent = response.get('id', None)
-            if not response['is_open']:
-                response = requests.put(
-                    '{}/{}'.format(url, parent),
-                    json={**basic_payload,
-                          **{'status': reopen_state}},
+        def create_or_update_bug(bug_id=None, alias=None, data='{}', reopen_state=None):
+            bug_url = '{}/{}'.format(url, bug_id if bug_id else alias)
+
+            try:
+                response = requests.get(
+                    bug_url,
+                    json=basic_payload,
                     headers=json_header,
                 )
-                logger.debug('update bug response: {}'.format(response.content))
-        except IndexError as e:
-            logger.debug('parent bug not found')
-            data = tracker_template.safe_substitute(
+                logger.debug('get bug result: {}'.format(response.json()))
+                response = response.json()['bugs'][0]
+                parent = response.get('id', None)
+                if reopen_state and not response['is_open']:
+                    response = requests.put(
+                        '{}/{}'.format(url, parent),
+                        json={**basic_payload,
+                              **{'status': reopen_state}},
+                        headers=json_header,
+                    )
+                    logger.debug('update bug response: {}'.format(response.content))
+            except IndexError as e:
+                logger.debug('bug not found. creating new bug')
+                response = requests.post(
+                    url,
+                    data=data,
+                    headers=json_header,
+                )
+                parent = response.json().get('id', None)
+                logger.info('created bug {}'.format(parent))
+
+            return parent
+
+        # Find, reopen, or create parent tracker bug.
+        parent = create_or_update_bug(
+            alias=short_hostname,
+            data=tracker_template.safe_substitute(
                 hostname=host,
                 alias=short_hostname,
                 **basic_payload
-            )
-            logger.warn('payload:{}'.format(data))
-            response = requests.post(
-                url,
-                data=data,
-                headers=json_header,
-            )
-            parent = response.json().get('id', None)
-            logger.info('created parent bug {}'.format(parent))
+            ),
+            reopen_state=reopen_state,
+        )
 
         # Get (if not closed) or create reboot bug.
         payload = reboot_template.safe_substitute(
             hostname=host,
             blocks=parent,
+            **job_data,
             **options,
             **basic_payload
         )
@@ -92,15 +99,12 @@ class Command(BaseCommand):
             bug = response.json()['bugs'][0]
             bug_id = bug['id']
             logger.info('existing bug found: {}'.format(bug_id))
-            if bug['is_open']:
-                updates['status'] = reopen_state
             updates['comment'] = {
                 'body': json.loads(payload)['description'],
             }
-        except Exception as e:
-            logger.exception(e)
+        except Exception:
+            logger.debug('creating new bug')
 
-            logger.warn(payload)
             response = requests.post(
                 url,
                 data=payload,
