@@ -228,7 +228,7 @@ class Base(Configuration, Celery):
     
     # how many seconds to wait for a machine to go down and come back up
     DOWN_TIMEOUT = values.IntegerValue(60, environ_prefix=None)
-    UP_TIMEOUT = values.IntegerValue(60, environ_prefix=None)
+    UP_TIMEOUT = values.IntegerValue(300, environ_prefix=None)
 
     REBOOT_METHODS = values.ListValue([
         'ipmi_reset',
@@ -244,6 +244,8 @@ class Dev(Base):
     DEBUG = values.BooleanValue(True, environ_prefix=None)
     ALLOWED_HOSTS = values.ListValue(['tools.taskcluster.net', 'localhost', '127.0.0.1'], environ_prefix=None)
     CORS_ORIGIN = values.Value('*', environ_prefix=None)
+
+    BUGZILLA_URL = values.Value('https://landfill.bugzilla.org/bugzilla-5.0-branch/rest/', environ_prefix=None)
 
 
 class Prod(Base):
