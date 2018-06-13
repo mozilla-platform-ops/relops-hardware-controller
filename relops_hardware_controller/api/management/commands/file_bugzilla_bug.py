@@ -35,8 +35,8 @@ class Command(BaseCommand):
             'Content-Type': 'application/json',
         }
         reopen_state = settings.BUGZILLA_REOPEN_STATE
-        tracker_template = settings.BUGZILLA_WORKER_TRACKER_TEMPLATE
-        reboot_template = settings.BUGZILLA_REBOOT_TEMPLATE
+        tracker_template = string.Template(settings.BUGZILLA_WORKER_TRACKER_TEMPLATE)
+        reboot_template = string.Template(settings.BUGZILLA_REBOOT_TEMPLATE)
         short_hostname = host.split('.')[0]
         if 'bugzilla-dev' in url:
             # bugzilla-dev aliases fail with dashes
