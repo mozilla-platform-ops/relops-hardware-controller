@@ -75,28 +75,17 @@ class Command(BaseCommand):
         parser.add_argument('job_data', type=json.loads)
 
     def handle(self, hostname, job_data, *args, **options):
-        stdout = StringIO()
-        result_template = '{command}: {stdout}. Completed in {time:.3g} seconds'
         start = time.time()
+        result_template = '{command}: {stdout}. Completed in {time:.3g} seconds'
         reboot_attempt_log = '\\n'
         config = settings.WORKER_CONFIG
-        short_hostname = hostname.split('.')[0]
         try:
-            server = config['servers'][short_hostname]
+            server = config['servers'][hostname.split('.')[0]]
         except:
             server = config['servers'][hostname]
 
-        parent = server.get('parent', None)
-
-        secrets = [
-            server.get('password', 'secret'),
-            config.get('snmp_community_string', 'secret'),
-            settings.BUGZILLA_API_KEY,
-            settings.TASKCLUSTER_ACCESS_TOKEN,
-        ]
-        if parent is not None:
-            secrets.append(config['servers'][parent].get('password', 'secret'))
-
+        logger.debug('reboot_methods:{}'.format(settings.REBOOT_METHODS))
+        stdout = StringIO()
         for reboot_method in settings.REBOOT_METHODS:
             reboot_args = []
             logger.debug('reboot_method:{}'.format(reboot_method))
