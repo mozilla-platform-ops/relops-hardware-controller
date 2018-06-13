@@ -245,30 +245,6 @@ class Dev(Base):
     ALLOWED_HOSTS = values.ListValue(['tools.taskcluster.net', 'localhost', '127.0.0.1'], environ_prefix=None)
     CORS_ORIGIN = values.Value('*', environ_prefix=None)
 
-    BUGZILLA_REOPEN_STATE = values.Value('UNCONFIRMED', environ_prefix=None)
-    BUGZILLA_REBOOT_TEMPLATE = values.Value(json.dumps(dict(
-        api_key='${api_key}',
-        product='Infrastructure & Operations',
-        component='DCOps',
-        assigned_to=NOTIFY_EMAIL,
-        cc=NOTIFY_EMAIL+',${cc}',
-        summary='${hostname} is unreachable',
-        version='unspecified',
-        description='The relops controller was unable to reboot ${hostname} ${ip} ${client_id} ${log}',
-        blocks='${blocks}',
-    )), environ_prefix=None)
-
-    BUGZILLA_WORKER_TRACKER_TEMPLATE = values.Value(json.dumps(dict(
-        api_key='${api_key}',
-        product='Infrastructure & Operations',
-        component='RelOps',
-        assigned_to=NOTIFY_EMAIL,
-        cc=NOTIFY_EMAIL,
-        summary='${hostname} problem tracking',
-        version='unspecified',
-        alias='${alias}',
-    )), environ_prefix=None)
-
 
 class Prod(Base):
     ALLOWED_HOSTS = values.ListValue(['tools.taskcluster.net'], environ_prefix=None)
