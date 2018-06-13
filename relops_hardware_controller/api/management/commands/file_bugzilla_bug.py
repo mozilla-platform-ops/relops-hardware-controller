@@ -62,7 +62,7 @@ class Command(BaseCommand):
                         headers=json_header,
                     )
                     logger.debug('update bug response: {}'.format(response.content))
-            except IndexError as e:
+            except:
                 logger.debug('bug not found. creating new bug')
                 response = requests.post(
                     url,
