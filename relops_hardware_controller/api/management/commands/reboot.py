@@ -103,13 +103,10 @@ class Command(BaseCommand):
             check = reboot_succeeded
             try:
                 if reboot_method == 'ssh_reboot':
-                    try:
-                        reboot_args = [
-                            '-l', server['ssh']['user'],
-                            '-i', server['ssh']['key_file'],
-                        ]
-                    except KeyError:
-                        raise KeyError('ssh credentials not found')
+                    reboot_args = [
+                        '-l', server['ssh']['user'],
+                        '-i', server['ssh']['key_file'],
+                    ]
                 elif reboot_method == 'ipmi_reset':
                     reboot_args = [ reboot_method ]
                     reboot_method = 'ipmi'
@@ -117,10 +114,7 @@ class Command(BaseCommand):
                     reboot_args = [ reboot_method ]
                     reboot_method = 'ipmi'
                 elif reboot_method == 'snmp_reboot':
-                    try:
-                        reboot_args = server['pdu'].rsplit(':', 1)
-                    except KeyError:
-                        raise KeyError('pdu data not found')
+                    reboot_args = server['pdu'].rsplit(':', 1)
                 elif reboot_method == 'xenapi_reboot':
                     reboot_args = server['xen']['reboot']
                 elif reboot_method == 'ilo_reboot':
@@ -143,17 +137,13 @@ class Command(BaseCommand):
                 if check(hostname):
                     break
 
-            except Exception as error:
-                logger.exception(error)
-                failure_message = '{}: {} {}\n{}'.format(
-                    reboot_method,
+            except Exception as e:
+                logger.exception(e)
+                reboot_attempt_log += '{} {} {} {}\\n'.format(
                     datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                    repr(error),
-                    getattr(error, 'output', ''))
-                for key in secrets:
-                    failure_message = failure_message.replace(key, 'secret')
-                logger.warn(failure_message)
-                reboot_attempt_log += '\\n' + json.dumps(failure_message)[1:-1]
+                    reboot_method,
+                    ' '.join(reboot_args),
+                    e.__class__.__name__)
 
         elapsed = time.time() - start
         return result_template.format(command=reboot_method, stdout=stdout.getvalue().rstrip('\n'), time=elapsed)
