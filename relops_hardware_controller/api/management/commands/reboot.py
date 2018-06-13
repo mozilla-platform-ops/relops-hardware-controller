@@ -140,7 +140,7 @@ class Command(BaseCommand):
             except Exception as e:
                 logger.exception(e)
                 reboot_attempt_log += '{} {} {} {}\\n'.format(
-                    datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                    datetime.utcnow().isoformat(),
                     reboot_method,
                     ' '.join(reboot_args),
                     e.__class__.__name__)
