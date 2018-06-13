@@ -66,7 +66,12 @@ class Command(BaseCommand):
     help = '''Tries reboot actions from REBOOT_METHODS environment var.'''
 
     def add_arguments(self, parser):
-        parser.add_argument('hostname', type=str)
+        # Positional arguments
+        parser.add_argument(
+            'hostname',
+            type=str,
+            help='A TC worker ID')
+
         parser.add_argument('job_data', type=json.loads)
 
     def handle(self, hostname, job_data, *args, **options):
@@ -122,7 +127,7 @@ class Command(BaseCommand):
                     hostname, reboot_args = server['ilo']
                 elif reboot_method == 'file_bugzilla_bug':
                     result_template = 'failed. bug {stdout}'
-                    reboot_args = [ 
+                    reboot_args = [
                         json.dumps(job_data),
                         '--log', reboot_attempt_log,
                     ]

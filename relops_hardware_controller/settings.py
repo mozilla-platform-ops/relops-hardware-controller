@@ -204,7 +204,7 @@ class Base(Configuration, Celery):
         cc='${cc}',
         summary='${hostname} is unreachable',
         version='unspecified',
-        description='The relops controller was unable to reboot ${hostname}: ${log}',
+        description='The relops controller was unable to reboot ${hostname} ${ip} ${client_id} ${log}',
         blocks='${blocks}',
     )), environ_prefix=None)
 
@@ -225,18 +225,17 @@ class Base(Configuration, Celery):
     ILO_PASSWORD = values.Value('', environ_prefix=None)
 
     WORKER_CONFIG = JSONFileValue('', environ_prefix=None, environ_name='WORKER_CONFIG_PATH')
-
+    
     # how many seconds to wait for a machine to go down and come back up
     DOWN_TIMEOUT = values.IntegerValue(60, environ_prefix=None)
     UP_TIMEOUT = values.IntegerValue(60, environ_prefix=None)
 
     REBOOT_METHODS = values.ListValue([
-        'ipmi_soft',
-        'ssh_reboot',
         'ipmi_reset',
         'ipmi_cycle',
         'snmp_reboot',  # snmp pdu for mac minis
         # 'ilo_reboot',  # for moonshot HW
+        # 'ssh_reboot',
         'file_bugzilla_bug',  # give up and file a bug
     ], environ_prefix=None)
 
@@ -251,8 +250,8 @@ class Dev(Base):
         api_key='${api_key}',
         product='Infrastructure & Operations',
         component='DCOps',
-        assigned_to='dhouse@mozilla.com',
-        cc='dhouse@mozilla.com,${cc}',
+        assigned_to=NOTIFY_EMAIL,
+        cc=NOTIFY_EMAIL+',${cc}',
         summary='${hostname} is unreachable',
         version='unspecified',
         description='The relops controller was unable to reboot ${hostname} ${ip} ${client_id} ${log}',
@@ -263,8 +262,8 @@ class Dev(Base):
         api_key='${api_key}',
         product='Infrastructure & Operations',
         component='RelOps',
-        assigned_to='dhouse@mozilla.com',
-        cc='dhouse@mozilla.com',
+        assigned_to=NOTIFY_EMAIL,
+        cc=NOTIFY_EMAIL,
         summary='${hostname} problem tracking',
         version='unspecified',
         alias='${alias}',

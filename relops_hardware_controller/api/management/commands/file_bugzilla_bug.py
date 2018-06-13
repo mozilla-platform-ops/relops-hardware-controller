@@ -1,3 +1,4 @@
+
 import logging
 import string
 import json
@@ -16,7 +17,12 @@ class Command(BaseCommand):
     doc_url = 'https://github.com/mozbhearsum/bzrest/blob/master/bzrest/client.py'
 
     def add_arguments(self, parser):
-        parser.add_argument('host', type=str)
+        # Positional arguments
+        parser.add_argument(
+            'host',
+            type=str,
+            help='A host',
+        )
         parser.add_argument('job_data', type=json.loads)
         parser.add_argument('--cc', dest='cc', default='', type=str)
         parser.add_argument('--log', dest='log', default='', type=str)
@@ -25,8 +31,8 @@ class Command(BaseCommand):
         url = settings.BUGZILLA_URL + '/rest/bug'
         basic_payload = { 'api_key': settings.BUGZILLA_API_KEY }
         json_header = {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
         }
         reopen_state = settings.BUGZILLA_REOPEN_STATE
         tracker_template = settings.BUGZILLA_WORKER_TRACKER_TEMPLATE
