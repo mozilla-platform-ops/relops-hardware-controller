@@ -71,6 +71,8 @@ def celery_call_command(job_data):
 
     logging.debug('job_data:{}'.format(job_data))
     (hostname, ip) = dns_lookup(job_data['worker_id'])
+    job_data['ip'] = str(ip)
+
     cmd_class = load_command_class('relops_hardware_controller.api', task)
     logging.debug('cmd_class:{}'.format(cmd_class))
 
@@ -79,7 +81,7 @@ def celery_call_command(job_data):
 
     stdout = StringIO()
     try:
-        call_command(cmd_class, hostname, command, stdout=stdout, stderr=stdout)
+        call_command(cmd_class, hostname, json.dumps(job_data), stdout=stdout, stderr=stdout)
     except subprocess.TimeoutExpired as e:
         logging.exception(e)
         message = 'timed out'

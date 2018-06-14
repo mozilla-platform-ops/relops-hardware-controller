@@ -196,6 +196,26 @@ class Base(Configuration, Celery):
 
     BUGZILLA_URL = values.URLValue(environ_prefix=None)
     BUGZILLA_API_KEY = values.SecretValue(environ_prefix=None)
+    BUGZILLA_REOPEN_STATE = values.Value('REOPENED', environ_prefix=None)
+    BUGZILLA_REBOOT_TEMPLATE = values.Value(json.dumps(dict(
+        api_key='${api_key}',
+        product='Infrastructure & Operations',
+        component='DCOps',
+        cc='${cc}',
+        summary='${hostname} is unreachable',
+        version='unspecified',
+        description='The relops controller was unable to reboot ${hostname} ${ip} ${client_id} ${log}',
+        blocks='${blocks}',
+    )), environ_prefix=None)
+
+    BUGZILLA_WORKER_TRACKER_TEMPLATE = values.Value(json.dumps(dict(
+        api_key='${api_key}',
+        product='Infrastructure & Operations',
+        component='CIDuty',
+        summary='${hostname} problem tracking',
+        version='unspecified',
+        alias='${alias}',
+    )), environ_prefix=None)
 
     XEN_URL = values.URLValue('', environ_prefix=None)
     XEN_USERNAME = values.Value('', environ_prefix=None)

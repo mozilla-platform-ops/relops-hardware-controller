@@ -1,6 +1,7 @@
 import functools
 import json
 import logging
+from datetime import datetime
 import time
 from io import StringIO
 
@@ -71,13 +72,12 @@ class Command(BaseCommand):
             type=str,
             help='A TC worker ID')
 
-        parser.add_argument(
-            'command',
-            type=str,
-            help='A TC worker group')
+        parser.add_argument('job_data', type=json.loads)
 
-    def handle(self, hostname, command, *args, **options):
+    def handle(self, hostname, job_data, *args, **options):
         start = time.time()
+        result_template = '{command}: {stdout}. Completed in {time:.3g} seconds'
+        reboot_attempt_log = '\\n'
         config = settings.WORKER_CONFIG
         try:
             server = config['servers'][hostname.split('.')[0]]
@@ -89,6 +89,7 @@ class Command(BaseCommand):
         for reboot_method in settings.REBOOT_METHODS:
             reboot_args = []
             logger.debug('reboot_method:{}'.format(reboot_method))
+            check = reboot_succeeded
             try:
                 if reboot_method == 'ssh_reboot':
                     reboot_args = [
@@ -108,23 +109,30 @@ class Command(BaseCommand):
                 elif reboot_method == 'ilo_reboot':
                     hostname, reboot_args = server['ilo']
                 elif reboot_method == 'file_bugzilla_bug':
-                    pass
+                    result_template = 'failed. bug {stdout}'
+                    reboot_args = [
+                        json.dumps(job_data),
+                        '--log', reboot_attempt_log,
+                    ]
+                    check = logger.info
                 else:
                     raise NotImplementedError()
 
                 call_command(load_command_class('relops_hardware_controller.api', reboot_method),
                              hostname,
-                             stdout=stdout,
-                             *reboot_args)
+                             *reboot_args,
+                             stdout=stdout)
 
-                if reboot_succeeded(hostname):
+                if check(hostname):
                     break
-            except Exception as error:
-                # try the next reboot method without waiting for the machine to come up
-                logger.warn('reboot: %s of %s failed with error: %s', reboot_method, hostname, error)
-                continue
 
-            # reboot method failed or didn't come up so try the next method
+            except Exception as e:
+                logger.exception(e)
+                reboot_attempt_log += '{} {} {} {}\\n'.format(
+                    datetime.utcnow().isoformat(),
+                    reboot_method,
+                    ' '.join(reboot_args),
+                    e.__class__.__name__)
 
         elapsed = time.time() - start
-        return '{}: {}. Completed in {:.3g} seconds'.format(reboot_method, stdout.getvalue().rstrip('\n'), elapsed)
+        return result_template.format(command=reboot_method, stdout=stdout.getvalue().rstrip('\n'), time=elapsed)
