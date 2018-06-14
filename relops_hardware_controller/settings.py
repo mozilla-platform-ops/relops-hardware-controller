@@ -204,7 +204,7 @@ class Base(Configuration, Celery):
         cc='${cc}',
         summary='${hostname} is unreachable',
         version='unspecified',
-        description='The relops controller was unable to reboot ${hostname} ${ip} ${client_id} ${log}',
+        description='Reboot ${hostname} ${ip}\nRequested by ${client_id}\nRelops controller action failed:${log}',
         blocks='${blocks}',
     )), environ_prefix=None)
 
