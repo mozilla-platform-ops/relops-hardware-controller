@@ -194,7 +194,7 @@ class Base(Configuration, Celery):
     NOTIFY_EMAIL = values.Value('dhouse@mozilla.com', environ_prefix=None)
     NOTIFY_IRC_CHANNEL = values.Value('#roller', environ_prefix=None)
 
-    BUGZILLA_URL = values.URLValue(environ_prefix=None)
+    BUGZILLA_URL = values.URLValue('https://bugzilla.mozilla.org', environ_prefix=None)
     BUGZILLA_API_KEY = values.SecretValue(environ_prefix=None)
     BUGZILLA_REOPEN_STATE = values.Value('REOPENED', environ_prefix=None)
     BUGZILLA_REBOOT_TEMPLATE = values.Value(json.dumps(dict(
@@ -204,7 +204,7 @@ class Base(Configuration, Celery):
         cc='${cc}',
         summary='${hostname} is unreachable',
         version='unspecified',
-        description='The relops controller was unable to reboot ${hostname} ${ip} ${client_id} ${log}',
+        description='Reboot ${hostname} ${ip}\nRequested by ${client_id}\nRelops controller action failed:${log}',
         blocks='${blocks}',
     )), environ_prefix=None)
 
@@ -225,7 +225,7 @@ class Base(Configuration, Celery):
     ILO_PASSWORD = values.Value('', environ_prefix=None)
 
     WORKER_CONFIG = JSONFileValue('', environ_prefix=None, environ_name='WORKER_CONFIG_PATH')
-    
+
     # how many seconds to wait for a machine to go down and come back up
     DOWN_TIMEOUT = values.IntegerValue(60, environ_prefix=None)
     UP_TIMEOUT = values.IntegerValue(300, environ_prefix=None)
