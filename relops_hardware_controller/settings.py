@@ -231,11 +231,10 @@ class Base(Configuration, Celery):
     UP_TIMEOUT = values.IntegerValue(300, environ_prefix=None)
 
     REBOOT_METHODS = values.ListValue([
+        'ssh_reboot',
         'ipmi_reset',
         'ipmi_cycle',
         'snmp_reboot',  # snmp pdu for mac minis
-        # 'ilo_reboot',  # for moonshot HW
-        # 'ssh_reboot',
         'file_bugzilla_bug',  # give up and file a bug
     ], environ_prefix=None)
 
