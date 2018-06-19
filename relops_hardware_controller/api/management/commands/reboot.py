@@ -92,10 +92,16 @@ class Command(BaseCommand):
             check = reboot_succeeded
             try:
                 if reboot_method == 'ssh_reboot':
-                    reboot_args = [
-                        '-l', server['ssh']['user'],
-                        '-i', server['ssh']['key_file'],
-                    ]
+                    try:
+                        reboot_args = [
+                            '-l', server['ssh']['user'],
+                            '-i', server['ssh']['key_file'],
+                        ]
+                    except KeyError:
+                        reboot_args = [
+                            '-l', 'roller',
+                            '-i', 'ssh.key',
+                        ]
                 elif reboot_method == 'ipmi_reset':
                     reboot_args = [ reboot_method ]
                     reboot_method = 'ipmi'
