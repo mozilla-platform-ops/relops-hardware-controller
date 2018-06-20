@@ -79,7 +79,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--timeout',
             dest='timeout',
-            default=5,
+            default=15,
             type=int,
             help='stop after N seconds',
         )
@@ -108,7 +108,12 @@ class Command(BaseCommand):
 
         logger.info(' '.join(call_args))
 
-        output = subprocess.check_output(call_args,
-                                         stderr=subprocess.STDOUT,
-                                         encoding='utf-8',
-                                         timeout=options['timeout'])
+        try:
+            return subprocess.check_output(call_args,
+                                           stderr=subprocess.STDOUT,
+                                           encoding='utf-8',
+                                           timeout=options['timeout'])
+        except Exception as e:
+            logging.exception(e)
+            logging.warn('ipmitool may report failure on success. '
+                         'So we ignore the exception and check for ping:')
