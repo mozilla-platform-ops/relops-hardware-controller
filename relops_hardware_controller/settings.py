@@ -43,11 +43,8 @@ class Celery:
     # Track if a task has been started, not only pending etc.
     CELERY_TASK_TRACK_STARTED = True
 
-    # Add a 5 minute soft timeout to all Celery tasks.
-    CELERY_TASK_SOFT_TIME_LIMIT = 60 * 5
-
-    # And a 10 minute hard timeout.
-    CELERY_TASK_TIME_LIMIT = CELERY_TASK_SOFT_TIME_LIMIT * 2
+    CELERY_TASK_SOFT_TIME_LIMIT = values.Value(60 * 10, environ_prefix=None)
+    CELERY_TASK_TIME_LIMIT = values.Value(60 * 20, environ_prefix=None)
 
 
 class Base(Configuration, Celery):
