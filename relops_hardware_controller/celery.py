@@ -112,7 +112,6 @@ def celery_call_command(job_data):
     mail_payload = {
         'subject': subject,
         'address': settings.NOTIFY_EMAIL,
-        # 'replyTo': 'relops@mozilla.com',
         'content': '{}\n\n{}: {}'.format(message, start_time, job_data['client_id']),
         'template': 'fullscreen',
         'link': { 'href':link, 'text':link[:text_link_max] },
