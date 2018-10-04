@@ -212,7 +212,7 @@ class Base(Configuration, Celery):
         api_key='${api_key}',
         product='Infrastructure & Operations',
         component='CIDuty',
-        summary='${hostname} problem tracking',
+        summary='[${DC}] ${alias} problem tracking',
         version='unspecified',
         alias='${alias}',
     )), environ_prefix=None)
