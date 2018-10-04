@@ -91,6 +91,7 @@ class Command(BaseCommand):
             logger.debug('reboot_method:{}'.format(reboot_method))
             check = reboot_succeeded
             try:
+                reboot_command = reboot_method
                 if reboot_method == 'ssh_reboot':
                     try:
                         reboot_args = [

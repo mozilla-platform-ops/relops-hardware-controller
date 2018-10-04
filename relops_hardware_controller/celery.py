@@ -79,6 +79,19 @@ def celery_call_command(job_data):
     subject = '{}[{}] {}'.format(job_data['worker_id'], ip, command)
     logging.info(subject)
 
+    client_id = job_data['client_id']
+    username = re.search('^mozilla(-auth0/ad\|Mozilla-LDAP\||-ldap\/)([^ @]+)(@mozilla\.com)?$', client_id).group(2)
+
+    notify = taskcluster.Notify()
+
+    if task != 'ping':
+        try:
+            notify.irc({
+                'channel': settings.NOTIFY_IRC_CHANNEL,
+                'message': '{} requested by {} ...'.format(subject, username) })
+        except Exception as e:
+            logging.warn(e)
+
     stdout = StringIO()
     try:
         call_command(cmd_class, hostname, json.dumps(job_data), stdout=stdout, stderr=stdout)
@@ -98,11 +111,10 @@ def celery_call_command(job_data):
         message = stdout.getvalue()
         logging.info(message)
 
+
     # Ignore most Notify logging
     log_level = logging.getLogger().level
     logging.getLogger().setLevel(logging.CRITICAL)
-
-    notify = taskcluster.Notify()
 
     link = '{http_origin}/provisioners/{provisioner_id}/worker-types/{worker_type}/workers/{worker_group}/{worker_id}'.format(**job_data)
     text_link_max = 40
@@ -117,9 +129,6 @@ def celery_call_command(job_data):
 
     try:
         notify.email(mail_payload)
-        
-        client_id = job_data['client_id']
-        username = re.search('^mozilla(-auth0/ad\|Mozilla-LDAP\||-ldap\/)([^ @]+)(@mozilla\.com)?$', client_id).group(2)
         notify.email({**mail_payload, 'address': '{}@mozilla.com'.format(username)})
     except Exception as e:
         logging.warn(e)
@@ -130,7 +139,6 @@ def celery_call_command(job_data):
         while message:
             chunk = message[:irc_message_max]
             notify.irc({ 'channel': settings.NOTIFY_IRC_CHANNEL, 'message': chunk })
-            notify.irc({ 'user': username, 'message': chunk })
             message = message[irc_message_max:]
     except Exception as e:
         logging.warn(e)
