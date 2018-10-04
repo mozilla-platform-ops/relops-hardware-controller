@@ -22,7 +22,7 @@ def can_ping(fqdn, count=4, timeout=5):
         stdout = StringIO()
         call_command(ping_cls, fqdn, 'ping', '-c', count, '-w', timeout, stdout=stdout)
         return True
-    except Exception as error:
+    except Exception:
         return False
 
 
