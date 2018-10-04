@@ -89,7 +89,7 @@ class Command(BaseCommand):
 
         logger.debug('reboot_methods:{}'.format(settings.REBOOT_METHODS))
         stdout = StringIO()
-        for reboot_method in ['ipmi_reset', 'file_bugzilla_bug']: #settings.REBOOT_METHODS:
+        for reboot_method in settings.REBOOT_METHODS:
             reboot_args = []
             logger.debug('reboot_method:{}'.format(reboot_method))
             check = reboot_succeeded
