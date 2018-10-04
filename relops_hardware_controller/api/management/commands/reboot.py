@@ -78,6 +78,7 @@ class Command(BaseCommand):
     def handle(self, hostname, job_data, *args, **options):
         start = time.time()
         rebooted = False
+        reboot_command = None
         result_template = '{command}: {stdout} Completed in {time:.3g} seconds'
         reboot_attempt_log = '\\n'
         reboot_attempt_log_short = ' '
@@ -94,6 +95,7 @@ class Command(BaseCommand):
             logger.debug('reboot_method:{}'.format(reboot_method))
             check = reboot_succeeded
             try:
+                reboot_command = reboot_method
                 if reboot_method == 'ssh_reboot':
                     try:
                         reboot_args = [
@@ -162,6 +164,6 @@ class Command(BaseCommand):
 
         elapsed = time.time() - start
         return result_template.format(
-            command=' '.join([reboot_method]+reboot_args),
+            command=reboot_command,
             stdout=stdout.getvalue().rstrip('\n'),
             time=elapsed)
