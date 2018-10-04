@@ -111,7 +111,6 @@ def celery_call_command(job_data):
         message = stdout.getvalue()
         logging.info(message)
 
-
     # Ignore most Notify logging
     log_level = logging.getLogger().level
     logging.getLogger().setLevel(logging.CRITICAL)
