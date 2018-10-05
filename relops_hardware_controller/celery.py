@@ -8,6 +8,7 @@ import json
 from io import StringIO
 import re
 import subprocess
+from datetime import datetime
 
 import dns.resolver
 import dns.name
@@ -71,12 +72,14 @@ def celery_call_command(job_data):
 
     logging.debug('job_data:{}'.format(job_data))
     (hostname, ip) = dns_lookup(job_data['worker_id'])
+    datacenter = str(hostname).split('.')[3].upper()
     job_data['ip'] = str(ip)
 
     cmd_class = load_command_class('relops_hardware_controller.api', task)
     logging.debug('cmd_class:{}'.format(cmd_class))
 
-    subject = '{}[{}] {}'.format(job_data['worker_id'], ip, command)
+    start_time = datetime.utcnow().isoformat()
+    subject = '{} {}[{}] {}'.format(datacenter, job_data['worker_id'], ip, command)
     logging.info(subject)
 
     stdout = StringIO()
@@ -109,8 +112,7 @@ def celery_call_command(job_data):
     mail_payload = {
         'subject': subject,
         'address': settings.NOTIFY_EMAIL,
-        'replyTo': 'relops@mozilla.com',
-        'content': message,
+        'content': '{}\n\n{}: {}'.format(message, start_time, job_data['client_id']),
         'template': 'fullscreen',
         'link': { 'href':link, 'text':link[:text_link_max] },
     }

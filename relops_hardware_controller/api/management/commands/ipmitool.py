@@ -106,14 +106,11 @@ class Command(BaseCommand):
             '-P', options['password'],
         ] + command
 
-        logger.info(' '.join(call_args))
-
         try:
             return subprocess.check_output(call_args,
                                            stderr=subprocess.STDOUT,
                                            encoding='utf-8',
                                            timeout=options['timeout'])
         except Exception as e:
-            logging.exception(e)
             logging.warn('ipmitool may report failure on success. '
                          'So we ignore the exception and check for ping:')

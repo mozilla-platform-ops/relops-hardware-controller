@@ -65,6 +65,8 @@ class Command(BaseCommand):
             'ssh',
 
             '-o', 'PasswordAuthentication=no',
+            '-o', 'ServerAliveInterval=2',
+            '-o', 'LogLevel=ERROR',
 
             # disable host key checks
             '-o', 'StrictHostKeyChecking=no',

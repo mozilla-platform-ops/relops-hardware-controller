@@ -38,6 +38,7 @@ class Command(BaseCommand):
         tracker_template = string.Template(settings.BUGZILLA_WORKER_TRACKER_TEMPLATE)
         reboot_template = string.Template(settings.BUGZILLA_REBOOT_TEMPLATE)
         short_hostname = host.split('.')[0]
+        datacenter = host.split('.')[3].upper()
         if 'bugzilla-dev' in url:
             # bugzilla-dev aliases fail with dashes
             short_hostname = short_hostname.replace('-', '')
@@ -80,6 +81,7 @@ class Command(BaseCommand):
             data=tracker_template.safe_substitute(
                 hostname=host,
                 alias=short_hostname,
+                DC=datacenter,
                 **basic_payload
             ),
             reopen_state=reopen_state,

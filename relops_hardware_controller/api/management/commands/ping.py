@@ -43,12 +43,12 @@ class Command(BaseCommand):
         validate_host(host)
 
         call_args = [
-            'set -e;out=$(ping',
+            'set -e; ret=0; out=$(ping',
             '-q', # only print summary lines
             '-c', str(options['count']),
             '-w', str(options['timeout']),
             host,
-            ');echo $out|tail -2|tr \'\n\' \'\t\'',
+            ' 2>&1) || ret=$?; echo $out|tail -2|tr \'\n\' \'\t\'; exit $ret',
         ]
 
         return subprocess.check_output(' '.join(call_args),
