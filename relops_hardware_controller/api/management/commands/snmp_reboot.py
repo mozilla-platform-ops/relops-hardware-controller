@@ -119,8 +119,10 @@ class Command(BaseCommand):
             logger.info('Powering down {} ...'.format(fqdn))
             output = self.run_cmd(pdu, self.cmds['off'], **options)
 
-            logger.info('delay {}s ...'.format(options['delay']))
+            delay_note = ' wait {}s ... '.format(options['delay'])
+            logger.info(delay_note)
             time.sleep(options['delay'])
+            output += delay_note
 
             logger.info('Powering up {} ...'.format(fqdn))
             output += self.run_cmd(pdu, self.cmds['on'], **options)
