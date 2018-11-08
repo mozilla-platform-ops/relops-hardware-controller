@@ -1,4 +1,3 @@
-
 import logging
 import subprocess
 import time
@@ -55,15 +54,13 @@ class Command(BaseCommand):
             help='Wait N seconds before turning the power back on.',
         )
 
-        # Named (required) arguments
-
         # Named (optional) arguments
 
         # Not an snmp option
         parser.add_argument(
             '--delay',
             dest='delay',
-            default=5,
+            default=0,
             type=int,
             help='Wait N seconds before turning the power back on.',
         )
@@ -117,4 +114,17 @@ class Command(BaseCommand):
         self.tower, self.infeed, self.outlet = self._parse_port(port)
 
         logger.info("Powercycling {} via {}.".format(fqdn, pdu))
-        return self.run_cmd(pdu, self.cmds['reboot'], **options)
+
+        if options['delay'] > 0:
+            logger.info('Powering down {} ...'.format(fqdn))
+            output = self.run_cmd(pdu, self.cmds['off'], **options)
+
+            logger.info('delay {}s ...'.format(options['delay']))
+            time.sleep(options['delay'])
+
+            logger.info('Powering up {} ...'.format(fqdn))
+            output += self.run_cmd(pdu, self.cmds['on'], **options)
+        else:
+            output = self.run_cmd(pdu, self.cmds['reboot'], **options)
+
+        return output
