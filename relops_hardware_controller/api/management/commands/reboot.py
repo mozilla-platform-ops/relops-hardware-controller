@@ -117,9 +117,20 @@ class Command(BaseCommand):
                     reboot_args = [ reboot_method ]
                     reboot_method = 'ipmi'
                 elif reboot_method == 'snmp_reboot':
-                    if not hasattr(server, 'pdu'):
+                    try:
+                        reboot_args = server['pdu'].rsplit(':', 1)
+                    except KeyError:
+                        # no pdu information
                         continue
-                    reboot_args = server['pdu'].rsplit(':', 1)
+                    reboot_args.append('reboot')
+                elif reboot_method == 'snmp_rebootdelay':
+                    try:
+                        reboot_args = server['pdu'].rsplit(':', 1)
+                    except KeyError:
+                        # no pdu information
+                        continue
+                    reboot_args.extend(['--delay', 60])
+                    reboot_method = 'snmp_reboot'
                 elif reboot_method == 'xenapi_reboot':
                     reboot_args = server['xen']['reboot']
                 elif reboot_method == 'ilo_reboot':
