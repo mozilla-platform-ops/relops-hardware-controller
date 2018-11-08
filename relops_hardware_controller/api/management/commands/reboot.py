@@ -175,5 +175,5 @@ class Command(BaseCommand):
         elapsed = time.time() - start
         return result_template.format(
             command=reboot_command,
-            stdout=stdout.getvalue().rstrip('\n'),
+            stdout=stdout.getvalue().replace('\n', '\r'),
             time=elapsed)
