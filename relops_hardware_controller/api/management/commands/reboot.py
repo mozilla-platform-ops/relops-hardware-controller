@@ -122,7 +122,6 @@ class Command(BaseCommand):
                     except KeyError:
                         # no pdu information
                         continue
-                    reboot_args.append('reboot')
                 elif reboot_method == 'snmp_rebootdelay':
                     try:
                         reboot_args = server['pdu'].rsplit(':', 1)
