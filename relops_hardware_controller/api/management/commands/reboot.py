@@ -162,7 +162,7 @@ class Command(BaseCommand):
                 reboot_attempt_log += '{} {} {} {}\\n'.format(
                     datetime.utcnow().isoformat(),
                     reboot_method,
-                    ' '.join(reboot_args),
+                    ' '.join(str(a) for a in reboot_args),
                     e.__class__.__name__)
                 reboot_attempt_log_short += '{} {} {}. '.format(
                     datetime.utcnow().strftime("%H:%M:%S"),
