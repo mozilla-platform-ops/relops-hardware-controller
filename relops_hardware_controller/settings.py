@@ -188,7 +188,8 @@ class Base(Configuration, Celery):
 
     # Worker Settings
 
-    NOTIFY_EMAIL = values.Value('dhouse@mozilla.com', environ_prefix=None)
+    NOTIFY_EMAIL = values.Value('', environ_prefix=None)
+    NOTIFY_EMAIL_CC = values.Value('', environ_prefix=None)
     NOTIFY_IRC_CHANNEL = values.Value('#roller', environ_prefix=None)
 
     BUGZILLA_URL = values.URLValue('https://bugzilla.mozilla.org', environ_prefix=None)
