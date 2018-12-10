@@ -135,7 +135,7 @@ class Command(BaseCommand):
                 elif reboot_method == 'ilo_reboot':
                     hostname, reboot_args = server['ilo']
                 elif reboot_method == 'file_bugzilla_bug':
-                    result_template = 'failed. bug {stdout}'
+                    result_template = 'failed. {stdout}'
                     reboot_args = [
                         json.dumps(job_data),
                         '--log', reboot_attempt_log,
