@@ -135,7 +135,7 @@ def celery_call_command(job_data):
         logging.warn(e)
 
     try:
-        message = '{}: {}'.format(subject, message)
+        message = '{}: {}'.format(subject, message.replace('\r', '\t'))
         irc_message_max = 510
         while message:
             chunk = message[:irc_message_max]
