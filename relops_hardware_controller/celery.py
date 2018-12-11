@@ -135,12 +135,6 @@ def celery_call_command(job_data):
         logging.warn(e)
 
     try:
-        cc_email = settings.NOTIFY_EMAIL_CC
-        notify.email({**mail_payload, 'address': cc_email})
-    except:
-        pass
-
-    try:
         message = '{}: {}'.format(subject, message.replace('\r', '\t'))
         irc_message_max = 510
         while message:
