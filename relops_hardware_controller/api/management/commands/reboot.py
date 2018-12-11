@@ -90,6 +90,11 @@ class Command(BaseCommand):
 
         logger.debug('reboot_methods:{}'.format(settings.REBOOT_METHODS))
         stdout = StringIO()
+        try:
+            bug_cc_email = server['bug_cc']
+        except Exception as e:
+            logging.warn(e)
+            bug_cc_email = ''
         for reboot_method in settings.REBOOT_METHODS:
             reboot_args = []
             logger.debug('reboot_method:{}'.format(reboot_method))
@@ -135,9 +140,10 @@ class Command(BaseCommand):
                 elif reboot_method == 'ilo_reboot':
                     hostname, reboot_args = server['ilo']
                 elif reboot_method == 'file_bugzilla_bug':
-                    result_template = 'failed. bug {stdout}'
+                    result_template = 'failed. {stdout}'
                     reboot_args = [
                         json.dumps(job_data),
+                        '--cc', bug_cc_email,
                         '--log', reboot_attempt_log,
                     ]
                     def check(hostname):

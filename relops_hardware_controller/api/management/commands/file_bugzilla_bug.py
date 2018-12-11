@@ -90,6 +90,8 @@ class Command(BaseCommand):
         # Get (if not closed) or create reboot bug.
         payload = reboot_template.safe_substitute(
             hostname=host,
+            alias=short_hostname,
+            DC=datacenter,
             blocks=parent,
             **job_data,
             **options,

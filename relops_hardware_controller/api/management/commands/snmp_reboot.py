@@ -114,10 +114,11 @@ class Command(BaseCommand):
         self.tower, self.infeed, self.outlet = self._parse_port(port)
 
         logger.info("Powercycling {} via {}.".format(fqdn, pdu))
+        output += "SNMP to {}:".format(pdu)
 
         if options['delay'] > 0:
             logger.info('Powering down {} ...'.format(fqdn))
-            output = self.run_cmd(pdu, self.cmds['off'], **options)
+            output += self.run_cmd(pdu, self.cmds['off'], **options)
 
             delay_note = ' wait {}s ... '.format(options['delay'])
             logger.info(delay_note)
@@ -127,6 +128,6 @@ class Command(BaseCommand):
             logger.info('Powering up {} ...'.format(fqdn))
             output += self.run_cmd(pdu, self.cmds['on'], **options)
         else:
-            output = self.run_cmd(pdu, self.cmds['reboot'], **options)
+            output += self.run_cmd(pdu, self.cmds['reboot'], **options)
 
         return output
