@@ -1,4 +1,3 @@
-
 import logging
 import subprocess
 
@@ -88,7 +87,8 @@ class Command(BaseCommand):
             try:
                 return subprocess.check_output(call_args + [reboot_cmd],
                                                stderr=subprocess.STDOUT,
-                                               timeout=options['timeout']).decode()
+                                               encoding='utf-8',
+                                               timeout=options['timeout'])
             except subprocess.CalledProcessError as error:
                 logger.info('{} ssh reboot with command {} failed: {}'.format(hostname, reboot_cmd, error))
 

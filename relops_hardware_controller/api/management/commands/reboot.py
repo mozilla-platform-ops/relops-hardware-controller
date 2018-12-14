@@ -5,6 +5,8 @@ from datetime import datetime
 import time
 from io import StringIO
 
+from celery.exceptions import SoftTimeLimitExceeded
+
 from django.conf import settings
 from django.core.management import (
     call_command,
@@ -22,6 +24,8 @@ def can_ping(fqdn, count=4, timeout=5):
         stdout = StringIO()
         call_command(ping_cls, fqdn, 'ping', '-c', count, '-w', timeout, stdout=stdout)
         return True
+    except SoftTimeLimitExceeded as e:
+        raise e
     except Exception:
         return False
 
@@ -162,6 +166,15 @@ class Command(BaseCommand):
                     break
                 else:
                     raise Exception('Reboot did not cycle power.')
+
+            except SoftTimeLimitExceeded as e:
+                logger.exception(e)
+                reboot_attempt_log_short += '{} {} {}. '.format(
+                    datetime.utcnow().strftime("%H:%M:%S"),
+                    reboot_method,
+                    e.__class__.__name__)
+                e.output = reboot_attempt_log_short
+                raise e
 
             except Exception as e:
                 logger.exception(e)
