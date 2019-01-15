@@ -96,20 +96,18 @@ def celery_call_command(job_data):
             logging.warn(e)
 
     stdout = StringIO()
+    message = ''
     try:
         call_command(cmd_class, hostname, json.dumps(job_data), stdout=stdout, stderr=stdout)
-    except subprocess.TimeoutExpired as e:
-        logging.exception(e)
-        message = 'timed out'
-    except subprocess.CalledProcessError as e:
-        logging.exception(e)
-        message = e.output
     except KeyError as e:
         logging.exception(e)
         message = 'Key error: {}'.format(e)
     except Exception as e:
         logging.exception(e)
-        message = e
+        try:
+            message = e.output
+        except:
+            message = e
     else:
         message = stdout.getvalue()
         logging.info(message)

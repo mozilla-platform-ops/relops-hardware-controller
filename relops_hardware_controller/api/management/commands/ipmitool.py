@@ -1,9 +1,10 @@
-
 import logging
 import subprocess
 
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand
+
+from celery.exceptions import SoftTimeLimitExceeded
 
 from relops_hardware_controller.api.validators import validate_host
 
@@ -111,6 +112,8 @@ class Command(BaseCommand):
                                            stderr=subprocess.STDOUT,
                                            encoding='utf-8',
                                            timeout=options['timeout'])
+        except SoftTimeLimitExceeded as e:
+            raise e
         except Exception as e:
             logging.warn('ipmitool may report failure on success. '
                          'So we ignore the exception and check for ping:')
